@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Multi-file import: select multiple JSON files at once from the file picker for batch import
+- Batch import preview: shows per-file validation status (valid/invalid), theme name, question count, and merge indicators
+- Invalid files are highlighted with errors and skipped during import; valid files are imported sequentially
+- After batch import, navigates to the theme page (single theme) or themes list (multiple themes)
 - Theme merge on import: when importing content with a theme title matching an existing theme (case-insensitive), new chapters are merged into the existing theme instead of creating a duplicate
 - Import preview shows merge indicator with amber banner when a matching theme is detected
 - Import button changes to "Merge into Existing Theme" when merge will occur
