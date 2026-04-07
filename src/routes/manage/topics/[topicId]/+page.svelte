@@ -72,7 +72,7 @@
 			topicId,
 			type: newType,
 			prompt: newPrompt.trim(),
-			choices: newType === 'multiple_choice' ? newChoices.filter((c) => c.trim()) : undefined,
+			choices: newType === 'multiple_choice' ? [...newChoices.filter((c) => c.trim())] : undefined,
 			correctAnswer: newCorrectAnswer.trim(),
 			explanation: newExplanation.trim(),
 			order: questions.length + 1,

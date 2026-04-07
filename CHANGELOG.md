@@ -40,3 +40,10 @@ All notable changes to this project will be documented in this file.
 - History summary cards use SVG icons for correct/incorrect/skipped counts
 - Session type labels capitalized in history list (Chapter, Custom, Review, Final)
 - Manage page shows empty state with import link when no themes exist
+
+### Fixed
+- Critical: JSON import failing silently due to Svelte 5 `$state` proxy objects not being serializable to IndexedDB (DataCloneError). Fixed by using `$state.snapshot()` to unwrap reactive proxies before passing data to Dexie write operations.
+- Preventive fix: spread `$state` arrays in content management question form to avoid same proxy serialization issue
+
+### Added (Testing)
+- End-to-end test suite (`e2e-test.mjs`) using Playwright with 42 tests covering: empty states, import flow, theme/chapter navigation, study session (MCQ + free text + final assessment), session completion, history, dashboard stats, custom session setup, content management, and mobile responsiveness

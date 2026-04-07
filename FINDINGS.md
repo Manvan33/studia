@@ -25,3 +25,16 @@ Technical findings, problems encountered, and solutions during development.
 **Problem**: Tailwind CSS 4 uses `@theme` directive instead of `tailwind.config.js` for custom theme values.
 
 **Solution**: Define custom colors with `@theme { --color-primary-500: #3b82f6; }` in the layout CSS file. Reference as standard Tailwind classes like `text-primary-700`, `bg-primary-600`.
+
+## Svelte 5 $state Proxy + IndexedDB DataCloneError
+
+**Problem**: When data stored in Svelte 5 `$state` variables is passed to Dexie/IndexedDB write operations (`add`, `bulkAdd`, `put`), IndexedDB throws `DataCloneError: [object Array] could not be cloned`. This is because Svelte 5 wraps `$state` values in deep reactive Proxy objects, and IndexedDB's structured clone algorithm cannot serialize Proxy objects.
+
+**Thought process**: The import flow appeared to work (validation passed, preview displayed correctly) but clicking "Import" had no visible effect — no navigation, no error message. Adding console.log to the handler revealed the function was called and passed the guard, but `importData()` threw a DexieError. The error message `DataCloneError` pointed to the structured clone issue with proxied arrays (like `choices` on MCQ questions).
+
+**Solution**: Use `$state.snapshot()` to unwrap the reactive proxy before passing data to Dexie:
+```typescript
+const rawPreview = $state.snapshot(preview);
+const { themeId } = await importData(rawPreview);
+```
+For simpler cases (e.g., a `$state` array being passed to `db.add()`), spreading the array (`[...proxyArray]`) also works. This applies anywhere `$state` data flows into IndexedDB write operations.

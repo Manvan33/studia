@@ -42,9 +42,12 @@
 		importing = true;
 
 		try {
-			const { themeId } = await importData(preview);
+			// Use $state.snapshot() to unwrap Svelte 5 reactive proxy before
+			// passing to Dexie/IndexedDB, which requires structuredClone-compatible objects
+			const rawPreview = $state.snapshot(preview);
+			const { themeId } = await importData(rawPreview);
 			goto(`/themes/${themeId}`);
-		} catch (e) {
+		} catch (e: unknown) {
 			parseError = e instanceof Error ? e.message : 'Import failed';
 			importing = false;
 		}
