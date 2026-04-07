@@ -12,6 +12,7 @@
 	let questions = $state<Question[]>([]);
 	let answers = $state<SessionAnswer[]>([]);
 	let currentIndex = $state(0);
+	let furthestIndex = $state(0);
 	let userAnswer = $state('');
 	let showExplanation = $state(false);
 	let currentAnswer = $state<SessionAnswer | undefined>();
@@ -26,29 +27,69 @@
 		loading = true;
 		const s = await db.sessions.get(sessionId);
 		if (!s) return;
+
+		if (s.completedAt) {
+			goto(`/history/${sessionId}`, { replaceState: true });
+			return;
+		}
+
 		session = s;
 
 		const qs = await db.questions.bulkGet(s.questionIds);
 		questions = qs.filter((q): q is Question => q !== undefined);
 
-		const existingAnswers = await db.sessionAnswers
-			.where('sessionId')
-			.equals(sessionId)
-			.toArray();
+		const existingAnswers = await db.sessionAnswers.where('sessionId').equals(sessionId).toArray();
 		answers = existingAnswers;
 
-		if (existingAnswers.length > 0) {
+		if (existingAnswers.length > 0 && existingAnswers.length < questions.length) {
+			const lastAnswer = existingAnswers.reduce((latest, a) =>
+				a.answeredAt > latest.answeredAt ? a : latest
+			);
+			const lastAnsweredIndex = questions.findIndex((q) => q.id === lastAnswer.questionId);
+
+			if (lastAnsweredIndex >= 0) {
+				currentIndex = lastAnsweredIndex;
+				furthestIndex = lastAnsweredIndex;
+				currentAnswer = lastAnswer;
+				showExplanation = true;
+			} else {
+				currentIndex = existingAnswers.length;
+				furthestIndex = existingAnswers.length;
+			}
+		} else if (existingAnswers.length > 0) {
 			currentIndex = existingAnswers.length;
+			furthestIndex = existingAnswers.length;
 		}
 
 		loading = false;
 	}
 
 	const currentQuestion = $derived(questions[currentIndex]);
-	const isComplete = $derived(currentIndex >= questions.length);
+	const isComplete = $derived(furthestIndex >= questions.length);
+	const isReviewingPast = $derived(currentIndex < furthestIndex);
+	const canGoPrevious = $derived(currentIndex > 0);
 	const progress = $derived(
-		questions.length > 0 ? Math.round((currentIndex / questions.length) * 100) : 0
+		questions.length > 0 ? Math.round((furthestIndex / questions.length) * 100) : 0
 	);
+
+	let shuffledChoices = $state<string[]>([]);
+
+	$effect(() => {
+		const q = currentQuestion;
+		if (q?.type === 'multiple_choice' && q.choices) {
+			shuffledChoices = shuffle([...q.choices]);
+		} else {
+			shuffledChoices = [];
+		}
+	});
+
+	function shuffle<T>(arr: T[]): T[] {
+		for (let i = arr.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[arr[i], arr[j]] = [arr[j], arr[i]];
+		}
+		return arr;
+	}
 
 	async function handleSubmit() {
 		if (!currentQuestion || submitting) return;
@@ -59,6 +100,9 @@
 		answers = [...answers, answer];
 		showExplanation = true;
 		submitting = false;
+		if (currentIndex >= furthestIndex) {
+			furthestIndex = currentIndex + 1;
+		}
 	}
 
 	async function handleSkip() {
@@ -70,13 +114,39 @@
 		answers = [...answers, answer];
 		showExplanation = true;
 		submitting = false;
+		if (currentIndex >= furthestIndex) {
+			furthestIndex = currentIndex + 1;
+		}
 	}
 
 	function nextQuestion() {
-		showExplanation = false;
-		currentAnswer = undefined;
-		userAnswer = '';
 		currentIndex++;
+		const existingAnswer = answers.find((a) => a.questionId === questions[currentIndex]?.id);
+		if (existingAnswer) {
+			currentAnswer = existingAnswer;
+			showExplanation = true;
+		} else {
+			showExplanation = false;
+			currentAnswer = undefined;
+		}
+		userAnswer = '';
+		if (currentIndex > furthestIndex) {
+			furthestIndex = currentIndex;
+		}
+	}
+
+	function goToPrevious() {
+		if (currentIndex <= 0) return;
+		currentIndex--;
+		const existingAnswer = answers.find((a) => a.questionId === questions[currentIndex]?.id);
+		if (existingAnswer) {
+			currentAnswer = existingAnswer;
+			showExplanation = true;
+		} else {
+			showExplanation = false;
+			currentAnswer = undefined;
+		}
+		userAnswer = '';
 	}
 
 	async function handleOverride(result: 'correct' | 'incorrect') {
@@ -116,7 +186,14 @@
 		<div class="flex justify-center gap-6">
 			<div class="text-center">
 				<div class="flex items-center justify-center gap-1">
-					<svg class="h-5 w-5 text-success-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+					<svg
+						class="h-5 w-5 text-success-600"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						stroke-width="2.5"
+						><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg
+					>
 					<p class="text-2xl font-bold text-success-600">
 						{answers.filter((a) => a.finalResult === 'correct').length}
 					</p>
@@ -125,7 +202,14 @@
 			</div>
 			<div class="text-center">
 				<div class="flex items-center justify-center gap-1">
-					<svg class="h-5 w-5 text-error-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+					<svg
+						class="h-5 w-5 text-error-600"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						stroke-width="2.5"
+						><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg
+					>
 					<p class="text-2xl font-bold text-error-600">
 						{answers.filter((a) => a.finalResult === 'incorrect').length}
 					</p>
@@ -134,7 +218,18 @@
 			</div>
 			<div class="text-center">
 				<div class="flex items-center justify-center gap-1">
-					<svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+					<svg
+						class="h-5 w-5 text-gray-400"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						stroke-width="2"
+						><path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M13 5l7 7-7 7M5 5l7 7-7 7"
+						/></svg
+					>
 					<p class="text-2xl font-bold text-gray-400">
 						{answers.filter((a) => a.skipped).length}
 					</p>
@@ -149,6 +244,19 @@
 		>
 			View Full Summary
 		</button>
+		<button
+			onclick={() => {
+				currentIndex = questions.length - 1;
+				const a = answers.find((a) => a.questionId === questions[currentIndex]?.id);
+				if (a) {
+					currentAnswer = a;
+					showExplanation = true;
+				}
+			}}
+			class="mx-auto block text-sm text-gray-500 hover:text-gray-700"
+		>
+			← Review questions
+		</button>
 	</div>
 {:else if currentQuestion}
 	<div class="mx-auto max-w-2xl space-y-6">
@@ -157,45 +265,84 @@
 				Question {currentIndex + 1} of {questions.length}
 			</span>
 			{#if currentQuestion.isFinalAssessment}
-				<span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
-					<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+				<span
+					class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700"
+				>
+					<svg
+						class="h-3.5 w-3.5"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						stroke-width="2"
+						><path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+						/></svg
+					>
 					Final Assessment
 				</span>
 			{/if}
 		</div>
 
-		<div class="h-2 w-full overflow-hidden rounded-full bg-gray-200" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Session progress">
+		<div
+			class="h-2 w-full overflow-hidden rounded-full bg-gray-200"
+			role="progressbar"
+			aria-valuenow={progress}
+			aria-valuemin={0}
+			aria-valuemax={100}
+			aria-label="Session progress"
+		>
 			<div
 				class="h-full rounded-full bg-primary-500 transition-all duration-300"
 				style="width: {progress}%"
 			></div>
 		</div>
 
-		<div class="rounded-xl border bg-white p-6 shadow-sm {currentQuestion.isFinalAssessment ? 'border-amber-300 bg-amber-50/30 ring-1 ring-amber-200' : 'border-gray-200'}">
+		<div
+			class="rounded-xl border bg-white p-6 shadow-sm {currentQuestion.isFinalAssessment
+				? 'border-amber-300 bg-amber-50/30 ring-1 ring-amber-200'
+				: 'border-gray-200'}"
+		>
 			{#if currentQuestion.isFinalAssessment}
 				<div class="mb-3 flex items-center gap-2 border-b border-amber-200 pb-3">
-					<svg class="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-					<span class="text-xs font-semibold uppercase tracking-wide text-amber-600">Final Assessment Question</span>
+					<svg
+						class="h-4 w-4 text-amber-600"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						stroke-width="2"
+						><path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+						/></svg
+					>
+					<span class="text-xs font-semibold tracking-wide text-amber-600 uppercase"
+						>Final Assessment Question</span
+					>
 				</div>
 			{/if}
 			{#if currentQuestion.context}
-				<div class="prose prose-sm mb-4 max-w-none rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700">
+				<div
+					class="prose prose-sm mb-4 max-w-none rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700"
+				>
 					{@html renderMarkdown(currentQuestion.context)}
 				</div>
 			{/if}
 			<p class="text-lg font-medium text-gray-900">{currentQuestion.prompt}</p>
 
 			{#if !showExplanation}
-				{#if currentQuestion.type === 'multiple_choice' && currentQuestion.choices}
+				{#if currentQuestion.type === 'multiple_choice' && shuffledChoices.length > 0}
 					<div class="mt-4 space-y-2" role="radiogroup" aria-label="Answer choices">
-						{#each currentQuestion.choices as choice}
+						{#each shuffledChoices as choice}
 							<button
 								onclick={() => selectChoice(choice)}
 								role="radio"
 								aria-checked={userAnswer === choice}
 								class="w-full rounded-lg border-2 px-4 py-3 text-left text-sm transition-colors {userAnswer ===
 								choice
-									? 'border-primary-500 bg-primary-50 text-primary-700 font-medium'
+									? 'border-primary-500 bg-primary-50 font-medium text-primary-700'
 									: 'border-gray-200 hover:border-gray-300'}"
 							>
 								{choice}
@@ -214,10 +361,18 @@
 				{/if}
 
 				<div class="mt-4 flex gap-3">
+					{#if canGoPrevious}
+						<button
+							onclick={goToPrevious}
+							class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
+						>
+							← Previous
+						</button>
+					{/if}
 					<button
 						onclick={handleSubmit}
 						disabled={!userAnswer.trim() || submitting}
-						class="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+						class="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						Submit Answer
 					</button>
@@ -233,22 +388,55 @@
 				<div class="mt-4 space-y-4" aria-live="polite">
 					{#if currentAnswer.skipped}
 						<div class="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-3">
-							<svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+							<svg
+								class="h-5 w-5 text-gray-400"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+								stroke-width="2"
+								><path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M13 5l7 7-7 7M5 5l7 7-7 7"
+								/></svg
+							>
 							<p class="text-sm font-medium text-gray-600">Skipped</p>
 						</div>
 					{:else}
 						<div
 							class="rounded-lg px-4 py-3 {currentAnswer.finalResult === 'correct'
-								? 'bg-green-50 border border-green-200'
-								: 'bg-red-50 border border-red-200'}"
+								? 'border border-green-200 bg-green-50'
+								: 'border border-red-200 bg-red-50'}"
 						>
 							<div class="flex items-center justify-between">
 								<div class="flex items-center gap-2">
 									{#if currentAnswer.finalResult === 'correct'}
-										<svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+										<svg
+											class="h-5 w-5 text-green-600"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											stroke-width="2.5"
+											><path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												d="M5 13l4 4L19 7"
+											/></svg
+										>
 										<p class="text-sm font-medium text-green-700">Correct</p>
 									{:else}
-										<svg class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+										<svg
+											class="h-5 w-5 text-red-600"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											stroke-width="2.5"
+											><path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												d="M6 18L18 6M6 6l12 12"
+											/></svg
+										>
 										<p class="text-sm font-medium text-red-700">Incorrect</p>
 									{/if}
 								</div>
@@ -265,9 +453,9 @@
 						</div>
 					{/if}
 
-					{#if currentQuestion.type === 'multiple_choice' && currentQuestion.choices && !currentAnswer.skipped}
+					{#if currentQuestion.type === 'multiple_choice' && shuffledChoices.length > 0 && !currentAnswer.skipped}
 						<div class="space-y-2" aria-label="Answer review">
-							{#each currentQuestion.choices as choice}
+							{#each shuffledChoices as choice}
 								{@const isCorrectChoice = choice === currentQuestion.correctAnswer}
 								{@const isUserChoice = choice === currentAnswer.userAnswer}
 								<div
@@ -279,13 +467,41 @@
 											: 'border-gray-100 bg-gray-50 opacity-60'}"
 								>
 									{#if isCorrectChoice}
-										<svg class="h-4 w-4 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+										<svg
+											class="h-4 w-4 shrink-0 text-green-600"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											stroke-width="2.5"
+											><path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												d="M5 13l4 4L19 7"
+											/></svg
+										>
 									{:else if isUserChoice}
-										<svg class="h-4 w-4 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+										<svg
+											class="h-4 w-4 shrink-0 text-red-600"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											stroke-width="2.5"
+											><path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												d="M6 18L18 6M6 6l12 12"
+											/></svg
+										>
 									{:else}
 										<span class="h-4 w-4 shrink-0"></span>
 									{/if}
-									<span class="{isCorrectChoice ? 'font-medium text-green-800' : isUserChoice && !isCorrectChoice ? 'font-medium text-red-800' : 'text-gray-500'}">
+									<span
+										class={isCorrectChoice
+											? 'font-medium text-green-800'
+											: isUserChoice && !isCorrectChoice
+												? 'font-medium text-red-800'
+												: 'text-gray-500'}
+									>
 										{choice}
 									</span>
 									{#if isCorrectChoice}
@@ -299,7 +515,7 @@
 					{/if}
 
 					<div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-						<p class="text-xs font-medium uppercase text-blue-600">Explanation</p>
+						<p class="text-xs font-medium text-blue-600 uppercase">Explanation</p>
 						<div class="prose prose-sm mt-1 max-w-none text-gray-700">
 							{@html renderMarkdown(currentQuestion.explanation)}
 						</div>
@@ -310,31 +526,63 @@
 							<span class="text-xs text-gray-500">Override result:</span>
 							<button
 								onclick={() => handleOverride('correct')}
-								class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium {currentAnswer.finalResult === 'correct'
+								class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium {currentAnswer.finalResult ===
+								'correct'
 									? 'bg-green-100 text-green-700'
 									: 'border border-gray-200 text-gray-500 hover:bg-gray-50'}"
 							>
-								<svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+								<svg
+									class="h-3 w-3"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+									stroke-width="2.5"
+									><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg
+								>
 								Mark Correct
 							</button>
 							<button
 								onclick={() => handleOverride('incorrect')}
-								class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium {currentAnswer.finalResult === 'incorrect'
+								class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium {currentAnswer.finalResult ===
+								'incorrect'
 									? 'bg-red-100 text-red-700'
 									: 'border border-gray-200 text-gray-500 hover:bg-gray-50'}"
 							>
-								<svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+								<svg
+									class="h-3 w-3"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+									stroke-width="2.5"
+									><path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										d="M6 18L18 6M6 6l12 12"
+									/></svg
+								>
 								Mark Incorrect
 							</button>
 						</div>
 					{/if}
 
-					<button
-						onclick={nextQuestion}
-						class="w-full rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700"
-					>
-						{currentIndex + 1 >= questions.length ? 'Finish' : 'Next Question'}
-					</button>
+					<div class="flex gap-3">
+						{#if canGoPrevious}
+							<button
+								onclick={goToPrevious}
+								class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
+							>
+								← Previous
+							</button>
+						{/if}
+						<button
+							onclick={nextQuestion}
+							class="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700"
+						>
+							{currentIndex + 1 >= questions.length && !isReviewingPast
+								? 'Finish'
+								: 'Next Question'}
+						</button>
+					</div>
 				</div>
 			{/if}
 		</div>

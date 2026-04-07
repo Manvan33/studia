@@ -16,6 +16,9 @@ All notable changes to this project will be documented in this file.
 - History page links incomplete sessions to the study player instead of history detail
 - History detail page redirects to study player if session is not yet completed
 - Theme and chapter names displayed on session cards in dashboard and history views
+- MCQ answer options are randomized (shuffled) each time a question is displayed
+- Previous question navigation: go back to review already-answered questions during a study session (read-only)
+- "Review questions" link on session completion screen to revisit answers before finalizing
 
 ### Added
 
