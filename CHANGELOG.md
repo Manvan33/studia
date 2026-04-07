@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+
+- Theme merge on import: when importing content with a theme title matching an existing theme (case-insensitive), new chapters are merged into the existing theme instead of creating a duplicate
+- Import preview shows merge indicator with amber banner when a matching theme is detected
+- Import button changes to "Merge into Existing Theme" when merge will occur
+- `findExistingTheme()` helper for case-insensitive theme lookup
+- Chapter order offset on merge: imported chapters receive orders that don't collide with existing chapters
+
+### Added
+
 - Optional `context` field on questions: markdown-formatted background information displayed before the question prompt
 - Markdown rendering for question explanations using `marked` library with Tailwind Typography (`prose`) styling
 - Markdown rendering for question context in study player and history detail views
@@ -15,10 +24,12 @@ All notable changes to this project will be documented in this file.
 - "Copy Prompt" button on Import page: one-click copy of the LLM prompt template to clipboard
 
 ### Changed
+
 - Explanation label in question form now hints at markdown support
 - PROMPT.md content rules updated: explanations must be detailed and markdown-formatted, context field documented
 
 ### Added
+
 - Initial SvelteKit project with Svelte 5, TypeScript, Tailwind CSS 4, Prettier, ESLint
 - Dexie.js (IndexedDB) database with full data model: themes, chapters, topics, questions, sessions, answers, question progress
 - Core type definitions matching SPECS.md entities
@@ -51,6 +62,7 @@ All notable changes to this project will be documented in this file.
 - README with project overview, import format, screen listing, and setup instructions
 
 ### Improved
+
 - Accessibility: correct/incorrect/skipped states now use SVG icons + text labels alongside color
 - Accessibility: MCQ choices remain visible after submission with visual markers for correct/wrong answers
 - Accessibility: aria-live region for answer feedback, ARIA roles for radiogroup choices, sr-only labels
@@ -62,8 +74,10 @@ All notable changes to this project will be documented in this file.
 - Manage page shows empty state with import link when no themes exist
 
 ### Fixed
+
 - Critical: JSON import failing silently due to Svelte 5 `$state` proxy objects not being serializable to IndexedDB (DataCloneError). Fixed by using `$state.snapshot()` to unwrap reactive proxies before passing data to Dexie write operations.
 - Preventive fix: spread `$state` arrays in content management question form to avoid same proxy serialization issue
 
 ### Added (Testing)
+
 - End-to-end test suite (`e2e-test.mjs`) using Playwright with 42 tests covering: empty states, import flow, theme/chapter navigation, study session (MCQ + free text + final assessment), session completion, history, dashboard stats, custom session setup, content management, and mobile responsiveness

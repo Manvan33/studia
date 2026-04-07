@@ -184,15 +184,37 @@ function validateQuestion(
 	}
 }
 
-export async function importData(data: ImportData): Promise<{ themeId: string }> {
+/**
+ * Find an existing theme by title (case-insensitive, trimmed).
+ * Returns the theme if found, or undefined.
+ */
+export async function findExistingTheme(title: string): Promise<LearningTheme | undefined> {
+	const normalized = title.trim().toLowerCase();
+	const allThemes = await db.themes.toArray();
+	return allThemes.find((t) => t.title.trim().toLowerCase() === normalized);
+}
+
+export async function importData(data: ImportData): Promise<{ themeId: string; merged: boolean }> {
 	const now = new Date().toISOString();
-	const themeId = nanoid();
+
+	const existingTheme = await findExistingTheme(data.theme.title);
+	const merged = !!existingTheme;
+	const themeId = existingTheme?.id ?? nanoid();
+
+	// For merge: offset chapter orders so they don't collide with existing chapters
+	let orderOffset = 0;
+	if (existingTheme) {
+		const existingChapters = await db.chapters.where('themeId').equals(themeId).toArray();
+		if (existingChapters.length > 0) {
+			orderOffset = Math.max(...existingChapters.map((c) => c.order)) + 1;
+		}
+	}
 
 	const theme: LearningTheme = {
 		id: themeId,
 		title: data.theme.title,
-		description: data.theme.description,
-		createdAt: now,
+		description: existingTheme?.description || data.theme.description,
+		createdAt: existingTheme?.createdAt ?? now,
 		updatedAt: now
 	};
 
@@ -208,7 +230,7 @@ export async function importData(data: ImportData): Promise<{ themeId: string }>
 			themeId,
 			title: importChapter.title,
 			description: importChapter.description,
-			order: importChapter.order,
+			order: importChapter.order + orderOffset,
 			createdAt: now,
 			updatedAt: now
 		});
@@ -239,13 +261,20 @@ export async function importData(data: ImportData): Promise<{ themeId: string }>
 	}
 
 	await db.transaction('rw', [db.themes, db.chapters, db.topics, db.questions], async () => {
-		await db.themes.add(theme);
+		if (existingTheme) {
+			await db.themes.update(themeId, {
+				description: theme.description,
+				updatedAt: now
+			});
+		} else {
+			await db.themes.add(theme);
+		}
 		await db.chapters.bulkAdd(chapters);
 		await db.topics.bulkAdd(topics);
 		await db.questions.bulkAdd(questions);
 	});
 
-	return { themeId };
+	return { themeId, merged };
 }
 
 function buildQuestion(

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { validateImportData, importData, extractJson } from '$lib/import';
+	import { validateImportData, importData, extractJson, findExistingTheme } from '$lib/import';
 	import { LLM_PROMPT } from '$lib/prompt';
-	import type { ImportData, ValidationError } from '$lib/types';
+	import type { ImportData, ValidationError, LearningTheme } from '$lib/types';
 
 	let jsonInput = $state('');
 	let fileName = $state('');
@@ -11,11 +11,13 @@
 	let importing = $state(false);
 	let parseError = $state('');
 	let promptCopied = $state(false);
+	let existingTheme = $state<LearningTheme | null>(null);
 
-	function handleParse() {
+	async function handleParse() {
 		errors = [];
 		preview = null;
 		parseError = '';
+		existingTheme = null;
 
 		if (!jsonInput.trim()) {
 			parseError = 'Please paste JSON or upload a file';
@@ -38,7 +40,10 @@
 			return;
 		}
 
-		preview = parsed as ImportData;
+		const importData = parsed as ImportData;
+		const found = await findExistingTheme(importData.theme.title);
+		existingTheme = found ?? null;
+		preview = importData;
 	}
 
 	async function handleImport() {
@@ -64,9 +69,9 @@
 
 		fileName = file.name;
 		const reader = new FileReader();
-		reader.onload = (e) => {
+		reader.onload = async (e) => {
 			jsonInput = (e.target?.result as string) ?? '';
-			handleParse();
+			await handleParse();
 		};
 		reader.readAsText(file);
 	}
@@ -77,6 +82,7 @@
 		errors = [];
 		preview = null;
 		parseError = '';
+		existingTheme = null;
 	}
 
 	async function copyPrompt() {
@@ -191,6 +197,16 @@
 		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 			<h2 class="text-lg font-semibold text-gray-900">Import Preview</h2>
 
+			{#if existingTheme}
+				<div class="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+					<svg class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+					<div>
+						<p class="text-sm font-medium text-amber-800">Will merge into existing theme</p>
+						<p class="text-xs text-amber-600">A theme named "{existingTheme.title}" already exists. New chapters will be added to it.</p>
+					</div>
+				</div>
+			{/if}
+
 			<div class="mt-4 space-y-3">
 				<div class="flex justify-between border-b border-gray-100 pb-2">
 					<span class="text-sm text-gray-500">Theme</span>
@@ -227,7 +243,7 @@
 					disabled={importing}
 					class="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700 disabled:opacity-50"
 				>
-					{importing ? 'Importing...' : 'Import'}
+					{importing ? (existingTheme ? 'Merging...' : 'Importing...') : (existingTheme ? 'Merge into Existing Theme' : 'Import')}
 				</button>
 				<button
 					onclick={clearAll}
