@@ -29,6 +29,12 @@ All notable changes to this project will be documented in this file.
 - Frequently missed questions tracking
 - Final assessment performance by chapter
 - Per-question progress tracking (times seen, correct, incorrect, last answered)
+- Chapter JSON editor: export chapter as JSON, edit in textarea, validate, and apply changes in place (`/manage/chapters/:id/json`)
+- Import page and chapter JSON editor accept full LLM output with ```json code fences (auto-extracts JSON)
+- LLM prompt template (`PROMPT.md`) for generating study content with two-phase thinking + JSON output
+- "Edit as JSON" link on chapter manage page
+- Copy to clipboard button on chapter JSON editor
+- README with project overview, import format, screen listing, and setup instructions
 
 ### Improved
 - Accessibility: correct/incorrect/skipped states now use SVG icons + text labels alongside color

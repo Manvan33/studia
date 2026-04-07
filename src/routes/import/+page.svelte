@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { validateImportData, importData } from '$lib/import';
+	import { validateImportData, importData, extractJson } from '$lib/import';
 	import type { ImportData, ValidationError } from '$lib/types';
 
 	let jsonInput = $state('');
@@ -20,11 +20,13 @@
 			return;
 		}
 
+		const jsonText = extractJson(jsonInput);
+
 		let parsed: unknown;
 		try {
-			parsed = JSON.parse(jsonInput);
+			parsed = JSON.parse(jsonText);
 		} catch {
-			parseError = 'Invalid JSON syntax';
+			parseError = 'Invalid JSON syntax. Paste raw JSON or LLM output containing a ```json code block.';
 			return;
 		}
 
@@ -91,7 +93,7 @@
 <div class="mx-auto max-w-2xl space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold text-gray-900">Import Content</h1>
-		<p class="mt-1 text-sm text-gray-500">Import a JSON study guide with themes, chapters, topics, and questions</p>
+		<p class="mt-1 text-sm text-gray-500">Paste raw JSON or full LLM output containing a JSON code block</p>
 	</div>
 
 	{#if !preview}
@@ -121,7 +123,7 @@
 
 			<textarea
 				bind:value={jsonInput}
-				placeholder="Paste your JSON here..."
+				placeholder="Paste JSON or full LLM output here..."
 				class="h-64 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 font-mono text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
 			></textarea>
 

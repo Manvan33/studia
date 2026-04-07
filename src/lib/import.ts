@@ -268,3 +268,141 @@ function buildQuestion(
 		updatedAt: now
 	};
 }
+
+export async function exportChapterAsJson(chapterId: string): Promise<ImportChapter> {
+	const chapter = await db.chapters.get(chapterId);
+	if (!chapter) throw new Error('Chapter not found');
+
+	const topics = await db.topics.where('chapterId').equals(chapterId).sortBy('order');
+
+	const topicQuestions = await db.questions
+		.where('chapterId')
+		.equals(chapterId)
+		.and((q) => !q.isFinalAssessment)
+		.toArray();
+
+	const finalQuestions = await db.questions
+		.where('chapterId')
+		.equals(chapterId)
+		.and((q) => q.isFinalAssessment)
+		.sortBy('order');
+
+	const exportTopics: ImportTopic[] = topics.map((t) => {
+		const tQuestions = topicQuestions
+			.filter((q) => q.topicId === t.id)
+			.sort((a, b) => a.order - b.order);
+
+		return {
+			title: t.title,
+			...(t.description ? { description: t.description } : {}),
+			order: t.order,
+			questions: tQuestions.map(questionToImport)
+		};
+	});
+
+	const result: ImportChapter = {
+		title: chapter.title,
+		...(chapter.description ? { description: chapter.description } : {}),
+		order: chapter.order,
+		topics: exportTopics
+	};
+
+	if (finalQuestions.length > 0) {
+		result.finalAssessment = finalQuestions.map(questionToImport);
+	}
+
+	return result;
+}
+
+function questionToImport(q: Question): ImportQuestion {
+	const result: ImportQuestion = {
+		type: q.type,
+		prompt: q.prompt,
+		correctAnswer: q.correctAnswer,
+		explanation: q.explanation,
+		order: q.order
+	};
+	if (q.choices) result.choices = q.choices;
+	if (q.tags && q.tags.length > 0) result.tags = q.tags;
+	if (q.difficulty) result.difficulty = q.difficulty;
+	return result;
+}
+
+export function validateChapterData(data: unknown): ValidationResult {
+	const errors: ValidationError[] = [];
+	validateChapter(data, 'chapter', errors);
+	return { valid: errors.length === 0, errors };
+}
+
+export async function updateChapterFromJson(
+	chapterId: string,
+	data: ImportChapter
+): Promise<void> {
+	const chapter = await db.chapters.get(chapterId);
+	if (!chapter) throw new Error('Chapter not found');
+
+	const now = new Date().toISOString();
+
+	const newTopics: Topic[] = [];
+	const newQuestions: Question[] = [];
+
+	for (const importTopic of data.topics) {
+		const topicId = nanoid();
+
+		newTopics.push({
+			id: topicId,
+			chapterId,
+			title: importTopic.title,
+			description: importTopic.description,
+			order: importTopic.order,
+			createdAt: now,
+			updatedAt: now
+		});
+
+		for (const importQuestion of importTopic.questions) {
+			newQuestions.push(buildQuestion(importQuestion, chapterId, topicId, false, now));
+		}
+	}
+
+	if (data.finalAssessment) {
+		for (const importQuestion of data.finalAssessment) {
+			newQuestions.push(buildQuestion(importQuestion, chapterId, undefined, true, now));
+		}
+	}
+
+	await db.transaction('rw', [db.chapters, db.topics, db.questions], async () => {
+		await db.questions.where('chapterId').equals(chapterId).delete();
+		await db.topics.where('chapterId').equals(chapterId).delete();
+
+		await db.chapters.update(chapterId, {
+			title: data.title,
+			description: data.description,
+			order: data.order,
+			updatedAt: now
+		});
+
+		await db.topics.bulkAdd(newTopics);
+		await db.questions.bulkAdd(newQuestions);
+	});
+}
+
+export function extractJson(input: string): string {
+	const fencePattern = /```json\s*\n([\s\S]*?)```/g;
+	let lastMatch: RegExpExecArray | null = null;
+	let match: RegExpExecArray | null;
+	while ((match = fencePattern.exec(input)) !== null) {
+		lastMatch = match;
+	}
+	if (lastMatch) return lastMatch[1].trim();
+
+	const genericPattern = /```\s*\n([\s\S]*?)```/g;
+	while ((match = genericPattern.exec(input)) !== null) {
+		lastMatch = match;
+	}
+	if (lastMatch) {
+		const content = lastMatch[1].trim();
+		if (content.startsWith('{')) return content;
+	}
+
+	return input.trim();
+}

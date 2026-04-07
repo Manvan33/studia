@@ -111,6 +111,12 @@
 				<button onclick={saveChapter} class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">
 					Save Changes
 				</button>
+				<a
+					href="/manage/chapters/{chapterId}/json"
+					class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+				>
+					Edit as JSON
+				</a>
 			</div>
 		</div>
 
