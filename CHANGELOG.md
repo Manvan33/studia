@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Optional `context` field on questions: markdown-formatted background information displayed before the question prompt
+- Markdown rendering for question explanations using `marked` library with Tailwind Typography (`prose`) styling
+- Markdown rendering for question context in study player and history detail views
+- Context textarea in topic question form (content management)
+- Explanation and context displayed in history detail per question (previously only showed answer)
+- `src/lib/markdown.ts` utility: `renderMarkdown()` with basic XSS sanitization
+- LLM prompt template updated with `context` field and detailed markdown explanation instructions
+
+### Changed
+- Explanation label in question form now hints at markdown support
+- PROMPT.md content rules updated: explanations must be detailed and markdown-formatted, context field documented
+
+### Added
 - Initial SvelteKit project with Svelte 5, TypeScript, Tailwind CSS 4, Prettier, ESLint
 - Dexie.js (IndexedDB) database with full data model: themes, chapters, topics, questions, sessions, answers, question progress
 - Core type definitions matching SPECS.md entities

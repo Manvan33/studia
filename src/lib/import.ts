@@ -166,6 +166,10 @@ function validateQuestion(
 		errors.push({ path: `${path}.order`, message: 'Question order must be a non-negative number' });
 	}
 
+	if (q.context !== undefined && typeof q.context !== 'string') {
+		errors.push({ path: `${path}.context`, message: 'Context must be a string if provided' });
+	}
+
 	if (
 		q.type === 'multiple_choice' &&
 		Array.isArray(q.choices) &&
@@ -257,6 +261,7 @@ function buildQuestion(
 		topicId,
 		type: iq.type,
 		prompt: iq.prompt,
+		context: iq.context,
 		choices: iq.choices,
 		correctAnswer: iq.correctAnswer,
 		explanation: iq.explanation,
@@ -322,6 +327,7 @@ function questionToImport(q: Question): ImportQuestion {
 		explanation: q.explanation,
 		order: q.order
 	};
+	if (q.context) result.context = q.context;
 	if (q.choices) result.choices = q.choices;
 	if (q.tags && q.tags.length > 0) result.tags = q.tags;
 	if (q.difficulty) result.difficulty = q.difficulty;

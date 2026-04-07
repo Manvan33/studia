@@ -39,6 +39,7 @@
 	},
 	"dependencies": {
 		"dexie": "^4.4.2",
+		"marked": "^18.0.0",
 		"nanoid": "^5.1.7"
 	}
 }

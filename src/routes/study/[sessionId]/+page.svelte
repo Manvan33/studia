@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
 	import { submitAnswer, overrideAnswer, completeSession } from '$lib/sessions';
+	import { renderMarkdown } from '$lib/markdown';
 	import type { StudySession, Question, SessionAnswer } from '$lib/types';
 
 	const sessionId = $derived(page.params.sessionId ?? '');
@@ -177,6 +178,11 @@
 					<span class="text-xs font-semibold uppercase tracking-wide text-amber-600">Final Assessment Question</span>
 				</div>
 			{/if}
+			{#if currentQuestion.context}
+				<div class="prose prose-sm mb-4 max-w-none rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700">
+					{@html renderMarkdown(currentQuestion.context)}
+				</div>
+			{/if}
 			<p class="text-lg font-medium text-gray-900">{currentQuestion.prompt}</p>
 
 			{#if !showExplanation}
@@ -294,7 +300,9 @@
 
 					<div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
 						<p class="text-xs font-medium uppercase text-blue-600">Explanation</p>
-						<p class="mt-1 text-sm text-gray-700">{currentQuestion.explanation}</p>
+						<div class="prose prose-sm mt-1 max-w-none text-gray-700">
+							{@html renderMarkdown(currentQuestion.explanation)}
+						</div>
 					</div>
 
 					{#if currentQuestion.type === 'free_text' && !currentAnswer.skipped}

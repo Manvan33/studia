@@ -16,6 +16,7 @@
 
 	let newType = $state<QuestionType>('multiple_choice');
 	let newPrompt = $state('');
+	let newContext = $state('');
 	let newChoices = $state<string[]>(['', '']);
 	let newCorrectAnswer = $state('');
 	let newExplanation = $state('');
@@ -72,6 +73,7 @@
 			topicId,
 			type: newType,
 			prompt: newPrompt.trim(),
+			context: newContext.trim() || undefined,
 			choices: newType === 'multiple_choice' ? [...newChoices.filter((c) => c.trim())] : undefined,
 			correctAnswer: newCorrectAnswer.trim(),
 			explanation: newExplanation.trim(),
@@ -85,6 +87,7 @@
 
 	function resetForm() {
 		newPrompt = '';
+		newContext = '';
 		newChoices = ['', ''];
 		newCorrectAnswer = '';
 		newExplanation = '';
@@ -159,6 +162,17 @@
 						></textarea>
 					</div>
 
+					<div>
+						<label for="q-context" class="mb-1 block text-xs font-medium text-gray-700">Context <span class="font-normal text-gray-400">(optional, markdown)</span></label>
+						<textarea
+							id="q-context"
+							bind:value={newContext}
+							rows="2"
+							placeholder="Background information shown before the question..."
+							class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+						></textarea>
+					</div>
+
 					{#if newType === 'multiple_choice'}
 						<div>
 							<p class="mb-1 text-xs font-medium text-gray-700">Choices</p>
@@ -189,7 +203,7 @@
 					</div>
 
 					<div>
-						<label for="q-explanation" class="mb-1 block text-xs font-medium text-gray-700">Explanation</label>
+						<label for="q-explanation" class="mb-1 block text-xs font-medium text-gray-700">Explanation <span class="font-normal text-gray-400">(markdown)</span></label>
 						<textarea
 							id="q-explanation"
 							bind:value={newExplanation}

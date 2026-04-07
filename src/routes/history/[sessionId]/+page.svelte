@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { db } from '$lib/db';
+	import { renderMarkdown } from '$lib/markdown';
 	import type { StudySession, SessionAnswer, Question, Chapter, Topic } from '$lib/types';
 
 	const sessionId = $derived(page.params.sessionId ?? '');
@@ -178,6 +179,12 @@
 								</div>
 								<p class="mt-1 text-xs text-gray-400">{getTopicTitle(question.topicId)}</p>
 
+								{#if question.context}
+									<div class="prose prose-sm mt-2 max-w-none rounded border border-gray-100 bg-gray-50 px-3 py-2 text-gray-600">
+										{@html renderMarkdown(question.context)}
+									</div>
+								{/if}
+
 								{#if answer}
 									<div class="mt-2 text-sm">
 										{#if answer.skipped}
@@ -188,6 +195,10 @@
 										{#if answer.finalResult === 'incorrect'}
 											<p class="text-success-600">Correct: {question.correctAnswer}</p>
 										{/if}
+									</div>
+									<div class="prose prose-sm mt-2 max-w-none rounded border border-blue-100 bg-blue-50 px-3 py-2 text-gray-600">
+										<p class="text-xs font-medium uppercase text-blue-600">Explanation</p>
+										{@html renderMarkdown(question.explanation)}
 									</div>
 								{/if}
 							</div>

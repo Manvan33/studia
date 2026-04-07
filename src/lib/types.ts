@@ -34,6 +34,7 @@ export interface Question {
 	topicId?: string;
 	type: QuestionType;
 	prompt: string;
+	context?: string;
 	choices?: string[];
 	correctAnswer: string;
 	explanation: string;
@@ -137,6 +138,7 @@ export interface ImportTopic {
 export interface ImportQuestion {
 	type: QuestionType;
 	prompt: string;
+	context?: string;
 	choices?: string[];
 	correctAnswer: string;
 	explanation: string;

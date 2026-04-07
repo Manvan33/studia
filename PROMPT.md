@@ -45,16 +45,18 @@ The JSON must match this exact schema:
             {
               "type": "multiple_choice",
               "prompt": "<question text>",
+              "context": "<optional markdown-formatted background information shown before the question>",
               "choices": ["<correct answer>", "<wrong 1>", "<wrong 2>", "<wrong 3>"],
               "correctAnswer": "<must exactly match one of the choices>",
-              "explanation": "<why this is the correct answer>",
+              "explanation": "<detailed markdown-formatted explanation of why this is correct>",
               "order": 1
             },
             {
               "type": "free_text",
               "prompt": "<question text>",
+              "context": "<optional markdown-formatted background information>",
               "correctAnswer": "<expected short answer>",
-              "explanation": "<why this is the correct answer>",
+              "explanation": "<detailed markdown-formatted explanation>",
               "order": 2
             }
           ]
@@ -64,9 +66,10 @@ The JSON must match this exact schema:
         {
           "type": "multiple_choice",
           "prompt": "<chapter-level assessment question>",
+          "context": "<optional markdown context for assessment questions>",
           "choices": ["<option A>", "<option B>", "<option C>"],
           "correctAnswer": "<must exactly match one choice>",
-          "explanation": "<explanation>",
+          "explanation": "<detailed markdown explanation>",
           "order": 1
         }
       ]
@@ -91,13 +94,19 @@ CONTENT RULES:
 - Extract questions that test understanding, not just recall.
 - For multiple choice: write 3-4 plausible distractors. The distractors should be common misconceptions or closely related concepts, not obviously wrong answers.
 - For free text: keep correctAnswer short (1-5 words). The app matches case-insensitively with trimmed whitespace.
-- Explanations should be concise but informative — tell the student WHY, not just restate the answer.
+- **Context field** (optional): Use `context` to provide background information the student needs before answering. Write it in **markdown format**. Good uses: a short paragraph explaining a scenario, a table of values, a code snippet, or a diagram description. Only include context when the question requires setup — don't add it to every question.
+- **Explanations** must be **detailed and markdown-formatted**. A good explanation:
+  - States WHY the correct answer is correct (not just restates it)
+  - Explains WHY each wrong answer is wrong (for MCQ)
+  - Provides additional context, references, or mnemonics when helpful
+  - Uses markdown formatting: **bold** for key terms, `code` for technical values, bullet lists for multiple points, etc.
 - Mix question types: aim for roughly 60-70% multiple choice, 30-40% free text.
 - Group questions under topics that reflect logical sections of the source material.
 - Add 5 finalAssessment questions per chapter that test cross-topic understanding.
 - Shuffle the position of the correct answer among the choices (don't always put it first).
 
 OPTIONAL FIELDS (include when relevant):
+- "context": "<markdown string>" — background information shown before the question (scenarios, tables, code snippets)
 - "tags": ["tag1", "tag2"] — categorization tags on questions
 - "difficulty": "easy" | "medium" | "hard" — difficulty level on questions
 - "description": string — on theme, chapters, or topics
