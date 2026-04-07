@@ -28,6 +28,16 @@
 		const seconds = Math.floor((ms % 60000) / 1000);
 		return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
 	}
+
+	function sessionTypeLabel(type: string): string {
+		switch (type) {
+			case 'chapter': return 'Chapter';
+			case 'custom': return 'Custom';
+			case 'wrong_only': return 'Review';
+			case 'final_assessment': return 'Final';
+			default: return type;
+		}
+	}
 </script>
 
 <div class="space-y-6">
@@ -57,7 +67,7 @@
 											? 'bg-red-100 text-red-700'
 											: 'bg-amber-100 text-amber-700'}"
 							>
-								{session.type.replace('_', ' ')}
+								{sessionTypeLabel(session.type)}
 							</span>
 							<span class="ml-2 text-sm text-gray-500">{formatDate(session.createdAt)}</span>
 						</div>

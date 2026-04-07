@@ -29,3 +29,14 @@ All notable changes to this project will be documented in this file.
 - Frequently missed questions tracking
 - Final assessment performance by chapter
 - Per-question progress tracking (times seen, correct, incorrect, last answered)
+
+### Improved
+- Accessibility: correct/incorrect/skipped states now use SVG icons + text labels alongside color
+- Accessibility: MCQ choices remain visible after submission with visual markers for correct/wrong answers
+- Accessibility: aria-live region for answer feedback, ARIA roles for radiogroup choices, sr-only labels
+- Accessibility: progress bar uses proper progressbar role with aria attributes
+- Final assessment questions visually distinct: amber border, tinted background, labeled header in session player
+- Final assessment badge with icon shown in history detail view per question
+- History summary cards use SVG icons for correct/incorrect/skipped counts
+- Session type labels capitalized in history list (Chapter, Custom, Review, Final)
+- Manage page shows empty state with import link when no themes exist

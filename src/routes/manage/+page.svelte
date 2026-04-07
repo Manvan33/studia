@@ -44,5 +44,13 @@
 				{/each}
 			</div>
 		</div>
+	{:else}
+		<div class="rounded-xl border-2 border-dashed border-gray-300 p-8 text-center">
+			<p class="text-lg font-medium text-gray-600">No content yet</p>
+			<p class="mt-1 text-sm text-gray-400">Import a study guide to get started</p>
+			<a href="/import" class="mt-3 inline-block rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">
+				Import JSON
+			</a>
+		</div>
 	{/if}
 </div>

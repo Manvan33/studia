@@ -90,15 +90,24 @@
 					<p class="text-xs text-gray-500">Score</p>
 				</div>
 				<div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
-					<p class="text-2xl font-bold text-success-600">{session.scoring.correct}</p>
+					<div class="flex items-center justify-center gap-1">
+						<svg class="h-4 w-4 text-success-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+						<p class="text-2xl font-bold text-success-600">{session.scoring.correct}</p>
+					</div>
 					<p class="text-xs text-gray-500">Correct</p>
 				</div>
 				<div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
-					<p class="text-2xl font-bold text-error-600">{session.scoring.incorrect}</p>
+					<div class="flex items-center justify-center gap-1">
+						<svg class="h-4 w-4 text-error-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+						<p class="text-2xl font-bold text-error-600">{session.scoring.incorrect}</p>
+					</div>
 					<p class="text-xs text-gray-500">Incorrect</p>
 				</div>
 				<div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
-					<p class="text-2xl font-bold text-gray-400">{session.scoring.skipped}</p>
+					<div class="flex items-center justify-center gap-1">
+						<svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+						<p class="text-2xl font-bold text-gray-400">{session.scoring.skipped}</p>
+					</div>
 					<p class="text-xs text-gray-500">Skipped</p>
 				</div>
 				<div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
@@ -115,8 +124,14 @@
 							<div class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
 								<span class="text-sm font-medium text-gray-900">{breakdown.topicTitle}</span>
 								<div class="flex gap-3 text-sm">
-									<span class="text-success-600">{breakdown.correct}✓</span>
-									<span class="text-error-600">{breakdown.incorrect}✗</span>
+									<span class="inline-flex items-center gap-0.5 text-success-600">
+										<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+										{breakdown.correct}
+									</span>
+									<span class="inline-flex items-center gap-0.5 text-error-600">
+										<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+										{breakdown.incorrect}
+									</span>
 									{#if breakdown.skipped > 0}
 										<span class="text-gray-400">{breakdown.skipped} skip</span>
 									{/if}
@@ -133,7 +148,7 @@
 			<div class="space-y-3">
 				{#each questions as question, i}
 					{@const answer = getAnswer(question.id)}
-					<div class="rounded-xl border border-gray-200 bg-white p-4">
+					<div class="rounded-xl border bg-white p-4 {question.isFinalAssessment ? 'border-amber-200 bg-amber-50/30' : 'border-gray-200'}">
 						<div class="flex items-start gap-3">
 							<span
 								class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold {answer?.finalResult === 'correct'
@@ -141,17 +156,32 @@
 									: answer?.finalResult === 'incorrect'
 										? 'bg-red-100 text-red-700'
 										: 'bg-gray-100 text-gray-500'}"
+								aria-label="{answer?.finalResult === 'correct' ? 'Correct' : answer?.finalResult === 'incorrect' ? 'Incorrect' : answer?.skipped ? 'Skipped' : 'Not answered'}"
 							>
-								{i + 1}
+								{#if answer?.finalResult === 'correct'}
+									<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+								{:else if answer?.finalResult === 'incorrect'}
+									<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+								{:else}
+									{i + 1}
+								{/if}
 							</span>
 							<div class="flex-1">
-								<p class="text-sm font-medium text-gray-900">{question.prompt}</p>
+								<div class="flex items-start justify-between gap-2">
+									<p class="text-sm font-medium text-gray-900">{question.prompt}</p>
+									{#if question.isFinalAssessment}
+										<span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+											<svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+											Final
+										</span>
+									{/if}
+								</div>
 								<p class="mt-1 text-xs text-gray-400">{getTopicTitle(question.topicId)}</p>
 
 								{#if answer}
 									<div class="mt-2 text-sm">
 										{#if answer.skipped}
-											<p class="text-gray-400">Skipped</p>
+											<p class="text-gray-400 italic">Skipped</p>
 										{:else}
 											<p class="text-gray-600">Your answer: {answer.userAnswer}</p>
 										{/if}
