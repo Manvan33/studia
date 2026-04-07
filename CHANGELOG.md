@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- LLM prompt template updated with USER-SETTINGS block (student persona, difficulty level, question count) to match PROMPT.md
+
 ### Added
 
 - Theme merge on import: when importing content with a theme title matching an existing theme (case-insensitive), new chapters are merged into the existing theme instead of creating a duplicate

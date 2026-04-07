@@ -102,6 +102,12 @@ OPTIONAL FIELDS (include when relevant):
 - "difficulty": "easy" | "medium" | "hard" — difficulty level on questions
 - "description": string — on theme, chapters, or topics
 
+USER-SETTINGS:
+
+- Student persona: I'm a Cisco Solutions Engineer, I have a strong background in networking. 
+- Difficulty level: Make it hard
+- How many questions: around 30 (20 while learning topics, 10 for the final assessment) per chapter
+
 Now read the following study material, analyze it (Phase 1), then produce the JSON (Phase 2):
 
 <paste study material here>`;
