@@ -65,7 +65,7 @@
 	}
 
 	const currentQuestion = $derived(questions[currentIndex]);
-	const isComplete = $derived(furthestIndex >= questions.length);
+	const isComplete = $derived(currentIndex >= questions.length);
 	const isReviewingPast = $derived(currentIndex < furthestIndex);
 	const canGoPrevious = $derived(currentIndex > 0);
 	const progress = $derived(
@@ -578,9 +578,7 @@
 							onclick={nextQuestion}
 							class="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700"
 						>
-							{currentIndex + 1 >= questions.length && !isReviewingPast
-								? 'Finish'
-								: 'Next Question'}
+							{currentIndex + 1 >= questions.length ? 'Finish' : 'Next Question'}
 						</button>
 					</div>
 				</div>
