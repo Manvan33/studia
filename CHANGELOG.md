@@ -20,6 +20,10 @@ All notable changes to this project will be documented in this file.
 - Previous question navigation: go back to review already-answered questions during a study session (read-only)
 - "Review questions" link on session completion screen to revisit answers before finalizing
 
+### Fixed
+
+- Session completion screen no longer appears before the user sees the last question's explanation
+
 ### Added
 
 - Optional `context` field on questions: markdown-formatted background information displayed before the question prompt
