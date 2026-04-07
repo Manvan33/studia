@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Explanation and context displayed in history detail per question (previously only showed answer)
 - `src/lib/markdown.ts` utility: `renderMarkdown()` with basic XSS sanitization
 - LLM prompt template updated with `context` field and detailed markdown explanation instructions
+- "Copy Prompt" button on Import page: one-click copy of the LLM prompt template to clipboard
 
 ### Changed
 - Explanation label in question form now hints at markdown support

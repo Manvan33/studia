@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { validateImportData, importData, extractJson } from '$lib/import';
+	import { LLM_PROMPT } from '$lib/prompt';
 	import type { ImportData, ValidationError } from '$lib/types';
 
 	let jsonInput = $state('');
@@ -9,6 +10,7 @@
 	let preview = $state<ImportData | null>(null);
 	let importing = $state(false);
 	let parseError = $state('');
+	let promptCopied = $state(false);
 
 	function handleParse() {
 		errors = [];
@@ -77,6 +79,16 @@
 		parseError = '';
 	}
 
+	async function copyPrompt() {
+		try {
+			await navigator.clipboard.writeText(LLM_PROMPT);
+			promptCopied = true;
+			setTimeout(() => (promptCopied = false), 2000);
+		} catch {
+			parseError = 'Failed to copy prompt to clipboard';
+		}
+	}
+
 	const totalQuestions = $derived(() => {
 		if (!preview) return 0;
 		let count = 0;
@@ -94,6 +106,27 @@
 	<div>
 		<h1 class="text-2xl font-bold text-gray-900">Import Content</h1>
 		<p class="mt-1 text-sm text-gray-500">Paste raw JSON or full LLM output containing a JSON code block</p>
+	</div>
+
+	<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+		<div class="flex items-center justify-between">
+			<div>
+				<p class="text-sm font-medium text-gray-900">LLM Prompt Template</p>
+				<p class="text-xs text-gray-500">Copy this prompt, paste your study material at the end, and send to any LLM</p>
+			</div>
+			<button
+				onclick={copyPrompt}
+				class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 {promptCopied ? 'border-green-300 bg-green-50 text-green-700' : ''}"
+			>
+				{#if promptCopied}
+					<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+					Copied!
+				{:else}
+					<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+					Copy Prompt
+				{/if}
+			</button>
+		</div>
 	</div>
 
 	{#if !preview}
