@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { db } from '$lib/db';
 	import { getProgressStats, type ProgressStats } from '$lib/progress';
-	import type { LearningTheme } from '$lib/types';
+	import type { LearningTheme, StudySession, Chapter } from '$lib/types';
 	import { liveQuery } from 'dexie';
 
 	let themes = $state<LearningTheme[]>([]);
 	let questionCount = $state(0);
 	let stats = $state<ProgressStats | null>(null);
+	let incompleteSessions = $state<StudySession[]>([]);
+	let chapterMap = $state<Map<string, Chapter>>(new Map());
 
 	$effect(() => {
 		const sub1 = liveQuery(() => db.themes.toArray()).subscribe({
@@ -15,14 +17,41 @@
 		const sub2 = liveQuery(() => db.questions.count()).subscribe({
 			next: (v) => (questionCount = v)
 		});
+		const sub3 = liveQuery(() =>
+			db.sessions
+				.filter((s) => !s.completedAt)
+				.reverse()
+				.sortBy('createdAt')
+		).subscribe({
+			next: (v) => (incompleteSessions = v)
+		});
+		const sub4 = liveQuery(() => db.chapters.toArray()).subscribe({
+			next: (v) => (chapterMap = new Map(v.map((c) => [c.id, c])))
+		});
 
 		loadStats();
 
 		return () => {
 			sub1.unsubscribe();
 			sub2.unsubscribe();
+			sub3.unsubscribe();
+			sub4.unsubscribe();
 		};
 	});
+
+	function getThemeTitle(themeIds: string[]): string {
+		return themeIds
+			.map((id) => themes.find((t) => t.id === id)?.title)
+			.filter(Boolean)
+			.join(', ') || '';
+	}
+
+	function getChapterTitles(chapterIds: string[]): string {
+		return chapterIds
+			.map((id) => chapterMap.get(id)?.title)
+			.filter(Boolean)
+			.join(', ') || '';
+	}
 
 	async function loadStats() {
 		stats = await getProgressStats();
@@ -74,6 +103,51 @@
 			</a>
 		</div>
 	{:else}
+		{#if incompleteSessions.length > 0}
+			<div>
+				<h2 class="mb-3 text-lg font-semibold text-gray-800">Continue Studying</h2>
+				<div class="space-y-2">
+					{#each incompleteSessions as session}
+						<a
+							href="/study/{session.id}"
+							class="flex items-center justify-between rounded-xl border border-primary-200 bg-primary-50 p-4 shadow-sm transition-shadow hover:shadow-md"
+						>
+							<div class="flex items-center gap-3">
+								<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100">
+									<svg class="h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+								</div>
+								<div>
+									<span
+										class="inline-block rounded-full px-2 py-0.5 text-xs font-medium {session.type ===
+										'chapter'
+											? 'bg-blue-100 text-blue-700'
+											: session.type === 'custom'
+												? 'bg-purple-100 text-purple-700'
+												: session.type === 'wrong_only'
+													? 'bg-red-100 text-red-700'
+													: 'bg-amber-100 text-amber-700'}"
+									>
+										{session.type.replace('_', ' ')}
+									</span>
+									{#if getThemeTitle(session.themeIds)}
+										<p class="mt-0.5 text-sm font-medium text-gray-800">{getThemeTitle(session.themeIds)}</p>
+									{/if}
+									{#if getChapterTitles(session.chapterIds)}
+										<p class="text-xs text-gray-500">{getChapterTitles(session.chapterIds)}</p>
+									{/if}
+									<p class="mt-0.5 text-xs text-gray-400">Started {formatDate(session.createdAt)}</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-2 text-sm font-medium text-primary-700">
+								Resume
+								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+							</div>
+						</a>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 			<div>
 				<h2 class="mb-3 text-lg font-semibold text-gray-800">Your Themes</h2>
@@ -104,7 +178,7 @@
 								href="/history/{session.id}"
 								class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 transition-shadow hover:shadow-sm"
 							>
-								<div>
+							<div>
 									<span
 										class="inline-block rounded-full px-2 py-0.5 text-xs font-medium {session.type ===
 										'chapter'
@@ -118,6 +192,13 @@
 										{session.type.replace('_', ' ')}
 									</span>
 									<span class="ml-2 text-sm text-gray-500">{formatDate(session.createdAt)}</span>
+									{#if getThemeTitle(session.themeIds) || getChapterTitles(session.chapterIds)}
+										<p class="mt-0.5 text-xs text-gray-500">
+											{#if getThemeTitle(session.themeIds)}<span class="font-medium text-gray-700">{getThemeTitle(session.themeIds)}</span>{/if}
+											{#if getThemeTitle(session.themeIds) && getChapterTitles(session.chapterIds)} · {/if}
+											{#if getChapterTitles(session.chapterIds)}{getChapterTitles(session.chapterIds)}{/if}
+										</p>
+									{/if}
 								</div>
 								<div class="text-right">
 									{#if session.scoring}

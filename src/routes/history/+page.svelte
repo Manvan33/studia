@@ -1,16 +1,42 @@
 <script lang="ts">
 	import { db } from '$lib/db';
-	import type { StudySession } from '$lib/types';
+	import type { StudySession, LearningTheme, Chapter } from '$lib/types';
 	import { liveQuery } from 'dexie';
 
 	let sessions = $state<StudySession[]>([]);
+	let themes = $state<LearningTheme[]>([]);
+	let chapterMap = $state<Map<string, Chapter>>(new Map());
 
 	$effect(() => {
 		const sub = liveQuery(() => db.sessions.orderBy('createdAt').reverse().toArray()).subscribe({
 			next: (v) => (sessions = v)
 		});
-		return () => sub.unsubscribe();
+		const sub2 = liveQuery(() => db.themes.toArray()).subscribe({
+			next: (v) => (themes = v)
+		});
+		const sub3 = liveQuery(() => db.chapters.toArray()).subscribe({
+			next: (v) => (chapterMap = new Map(v.map((c) => [c.id, c])))
+		});
+		return () => {
+			sub.unsubscribe();
+			sub2.unsubscribe();
+			sub3.unsubscribe();
+		};
 	});
+
+	function getThemeTitle(themeIds: string[]): string {
+		return themeIds
+			.map((id) => themes.find((t) => t.id === id)?.title)
+			.filter(Boolean)
+			.join(', ') || '';
+	}
+
+	function getChapterTitles(chapterIds: string[]): string {
+		return chapterIds
+			.map((id) => chapterMap.get(id)?.title)
+			.filter(Boolean)
+			.join(', ') || '';
+	}
 
 	function formatDate(iso: string): string {
 		return new Date(iso).toLocaleDateString('en-US', {
@@ -52,7 +78,7 @@
 		<div class="space-y-3">
 			{#each sessions as session}
 				<a
-					href="/history/{session.id}"
+					href="{session.completedAt ? `/history/${session.id}` : `/study/${session.id}`}"
 					class="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
 				>
 					<div class="flex items-center justify-between">
@@ -70,6 +96,13 @@
 								{sessionTypeLabel(session.type)}
 							</span>
 							<span class="ml-2 text-sm text-gray-500">{formatDate(session.createdAt)}</span>
+							{#if getThemeTitle(session.themeIds) || getChapterTitles(session.chapterIds)}
+								<p class="mt-0.5 text-xs text-gray-500">
+									{#if getThemeTitle(session.themeIds)}<span class="font-medium text-gray-700">{getThemeTitle(session.themeIds)}</span>{/if}
+									{#if getThemeTitle(session.themeIds) && getChapterTitles(session.chapterIds)} · {/if}
+									{#if getChapterTitles(session.chapterIds)}{getChapterTitles(session.chapterIds)}{/if}
+								</p>
+							{/if}
 						</div>
 						{#if session.scoring}
 							<div class="text-right">

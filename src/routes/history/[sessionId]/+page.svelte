@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
 	import { renderMarkdown } from '$lib/markdown';
 	import type { StudySession, SessionAnswer, Question, Chapter, Topic } from '$lib/types';
@@ -24,6 +25,12 @@
 			loading = false;
 			return;
 		}
+
+		if (!s.completedAt) {
+			goto(`/study/${sessionId}`, { replaceState: true });
+			return;
+		}
+
 		session = s;
 
 		const qs = await db.questions.bulkGet(s.questionIds);

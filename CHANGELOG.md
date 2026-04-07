@@ -11,6 +11,11 @@ All notable changes to this project will be documented in this file.
 - Import button changes to "Merge into Existing Theme" when merge will occur
 - `findExistingTheme()` helper for case-insensitive theme lookup
 - Chapter order offset on merge: imported chapters receive orders that don't collide with existing chapters
+- Session resume: incomplete study sessions can be resumed from where you left off
+- Dashboard "Continue Studying" section shows all in-progress sessions with resume links
+- History page links incomplete sessions to the study player instead of history detail
+- History detail page redirects to study player if session is not yet completed
+- Theme and chapter names displayed on session cards in dashboard and history views
 
 ### Added
 
