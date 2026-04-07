@@ -48,11 +48,7 @@ export function validateImportData(data: unknown): ValidationResult {
 	return { valid: errors.length === 0, errors };
 }
 
-function validateChapter(
-	chapter: unknown,
-	path: string,
-	errors: ValidationError[]
-): void {
+function validateChapter(chapter: unknown, path: string, errors: ValidationError[]): void {
 	if (!chapter || typeof chapter !== 'object') {
 		errors.push({ path, message: 'Chapter must be an object' });
 		return;
@@ -90,11 +86,7 @@ function validateChapter(
 	}
 }
 
-function validateTopic(
-	topic: unknown,
-	path: string,
-	errors: ValidationError[]
-): void {
+function validateTopic(topic: unknown, path: string, errors: ValidationError[]): void {
 	if (!topic || typeof topic !== 'object') {
 		errors.push({ path, message: 'Topic must be an object' });
 		return;
@@ -122,11 +114,7 @@ function validateTopic(
 	}
 }
 
-function validateQuestion(
-	question: unknown,
-	path: string,
-	errors: ValidationError[]
-): void {
+function validateQuestion(question: unknown, path: string, errors: ValidationError[]): void {
 	if (!question || typeof question !== 'object') {
 		errors.push({ path, message: 'Question must be an object' });
 		return;
@@ -134,10 +122,10 @@ function validateQuestion(
 
 	const q = question as Record<string, unknown>;
 
-	if (q.type !== 'multiple_choice' && q.type !== 'free_text') {
+	if (q.type !== 'multiple_choice' && q.type !== 'free_text' && q.type !== 'multiple_select') {
 		errors.push({
 			path: `${path}.type`,
-			message: 'Question type must be "multiple_choice" or "free_text"'
+			message: 'Question type must be "multiple_choice", "free_text", or "multiple_select"'
 		});
 	}
 
@@ -145,17 +133,40 @@ function validateQuestion(
 		errors.push({ path: `${path}.prompt`, message: 'Question prompt is required' });
 	}
 
-	if (q.type === 'multiple_choice') {
+	if (q.type === 'multiple_choice' || q.type === 'multiple_select') {
 		if (!Array.isArray(q.choices) || q.choices.length < 2) {
 			errors.push({
 				path: `${path}.choices`,
-				message: 'Multiple choice questions require at least 2 choices'
+				message: `${q.type === 'multiple_select' ? 'Multiple select' : 'Multiple choice'} questions require at least 2 choices`
 			});
 		}
 	}
 
-	if (!q.correctAnswer || typeof q.correctAnswer !== 'string' || q.correctAnswer.trim() === '') {
-		errors.push({ path: `${path}.correctAnswer`, message: 'Correct answer is required' });
+	if (q.type === 'free_text' && q.choices !== undefined) {
+		errors.push({
+			path: `${path}.choices`,
+			message: 'Free text questions must not have a choices field'
+		});
+	}
+
+	if (q.type === 'multiple_select') {
+		if (!Array.isArray(q.correctAnswers) || q.correctAnswers.length < 1) {
+			errors.push({
+				path: `${path}.correctAnswers`,
+				message: 'Multiple select questions require a correctAnswers array with at least 1 item'
+			});
+		}
+		if (q.correctAnswer !== undefined) {
+			errors.push({
+				path: `${path}.correctAnswer`,
+				message:
+					'Multiple select questions must not have a correctAnswer field — use correctAnswers instead'
+			});
+		}
+	} else {
+		if (!q.correctAnswer || typeof q.correctAnswer !== 'string' || q.correctAnswer.trim() === '') {
+			errors.push({ path: `${path}.correctAnswer`, message: 'Correct answer is required' });
+		}
 	}
 
 	if (!q.explanation || typeof q.explanation !== 'string' || q.explanation.trim() === '') {
@@ -180,6 +191,18 @@ function validateQuestion(
 				path: `${path}.correctAnswer`,
 				message: 'Correct answer must be one of the provided choices'
 			});
+		}
+	}
+
+	if (q.type === 'multiple_select' && Array.isArray(q.choices) && Array.isArray(q.correctAnswers)) {
+		for (const ca of q.correctAnswers) {
+			if (typeof ca !== 'string' || !q.choices.includes(ca)) {
+				errors.push({
+					path: `${path}.correctAnswers`,
+					message: `Each correctAnswers entry must be an exact match to one of the choices (invalid: "${ca}")`
+				});
+				break;
+			}
 		}
 	}
 }
@@ -292,7 +315,8 @@ function buildQuestion(
 		prompt: iq.prompt,
 		context: iq.context,
 		choices: iq.choices,
-		correctAnswer: iq.correctAnswer,
+		correctAnswer: iq.correctAnswer ?? '',
+		correctAnswers: iq.correctAnswers,
 		explanation: iq.explanation,
 		order: iq.order,
 		tags: iq.tags,
@@ -352,10 +376,14 @@ function questionToImport(q: Question): ImportQuestion {
 	const result: ImportQuestion = {
 		type: q.type,
 		prompt: q.prompt,
-		correctAnswer: q.correctAnswer,
 		explanation: q.explanation,
 		order: q.order
 	};
+	if (q.type === 'multiple_select') {
+		result.correctAnswers = q.correctAnswers;
+	} else {
+		result.correctAnswer = q.correctAnswer;
+	}
 	if (q.context) result.context = q.context;
 	if (q.choices) result.choices = q.choices;
 	if (q.tags && q.tags.length > 0) result.tags = q.tags;
@@ -369,10 +397,7 @@ export function validateChapterData(data: unknown): ValidationResult {
 	return { valid: errors.length === 0, errors };
 }
 
-export async function updateChapterFromJson(
-	chapterId: string,
-	data: ImportChapter
-): Promise<void> {
+export async function updateChapterFromJson(chapterId: string, data: ImportChapter): Promise<void> {
 	const chapter = await db.chapters.get(chapterId);
 	if (!chapter) throw new Error('Chapter not found');
 

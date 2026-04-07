@@ -49,6 +49,15 @@ The JSON must match this exact schema:
               "correctAnswer": "<expected short answer>",
               "explanation": "<detailed markdown-formatted explanation>",
               "order": 2
+            },
+            {
+              "type": "multiple_select",
+              "prompt": "<question text — select all that apply>",
+              "context": "<optional markdown-formatted background information>",
+              "choices": ["<correct 1>", "<correct 2>", "<wrong 1>", "<wrong 2>"],
+              "correctAnswers": ["<correct 1>", "<correct 2>"],
+              "explanation": "<detailed markdown-formatted explanation>",
+              "order": 3
             }
           ]
         }
@@ -70,16 +79,19 @@ The JSON must match this exact schema:
 
 HARD RULES — violations will break the import:
 1. The JSON block MUST be the last thing in your response, inside a \`\`\`json fence.
-2. Every question MUST have: type, prompt, correctAnswer, explanation, order.
-3. Multiple choice questions MUST have a "choices" array with at least 2 items.
+2. Every question MUST have: type, prompt, explanation, order.
+3. Multiple choice questions MUST have a "choices" array with at least 2 items and a "correctAnswer" string.
 4. For multiple choice, "correctAnswer" MUST be an exact string match to one of the "choices".
-5. Free text questions MUST NOT have a "choices" field.
-6. "order" values MUST be non-negative numbers (0, 1, 2, ...). Use sequential integers starting from 1.
-7. Every topic MUST have at least 1 question.
-8. Every chapter MUST have at least 1 topic.
-9. There MUST be at least 1 chapter.
-10. "theme.title" MUST be a non-empty string.
-11. Do NOT put any text after the closing \`\`\`json fence.
+5. Free text questions MUST NOT have a "choices" field. They MUST have a "correctAnswer" string.
+6. Multiple select questions MUST have a "choices" array with at least 2 items and a "correctAnswers" array with at least 1 item.
+7. For multiple select, each entry in "correctAnswers" MUST be an exact string match to one of the "choices".
+8. Multiple select questions MUST NOT have a "correctAnswer" field — use "correctAnswers" (plural) only.
+9. "order" values MUST be non-negative numbers (0, 1, 2, ...). Use sequential integers starting from 1.
+10. Every topic MUST have at least 1 question.
+11. Every chapter MUST have at least 1 topic.
+12. There MUST be at least 1 chapter.
+13. "theme.title" MUST be a non-empty string.
+14. Do NOT put any text after the closing \`\`\`json fence.
 
 CONTENT RULES:
 - Extract questions that test understanding, not just recall.
@@ -91,7 +103,8 @@ CONTENT RULES:
   - Explains WHY each wrong answer is wrong (for MCQ)
   - Provides additional context, references, or mnemonics when helpful
   - Uses markdown formatting: **bold** for key terms, \`code\` for technical values, bullet lists for multiple points, etc.
-- Mix question types: aim for roughly 60-70% multiple choice, 30-40% free text.
+- Mix question types: aim for roughly 50-60% multiple choice, 20-30% free text, 10-20% multiple select ("select all that apply").
+- Use multiple select questions when a concept has multiple correct components, categories, or conditions that all apply.
 - Group questions under topics that reflect logical sections of the source material.
 - Add 5 finalAssessment questions per chapter that test cross-topic understanding.
 - Shuffle the position of the correct answer among the choices (don't always put it first).

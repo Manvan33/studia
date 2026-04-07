@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Multiple select ("select all that apply") question type**: new `multiple_select` type alongside `multiple_choice` and `free_text`
+- Import validation: `multiple_select` questions require `choices` (≥2) and `correctAnswers` array (≥1, each must match a choice); must not have `correctAnswer`
+- Import/export: `buildQuestion` and `questionToImport` handle `correctAnswers` field for `multiple_select`
+- Study player: checkbox-based UI with "Select all that apply" instruction, shuffled choices, submit disabled until ≥1 selected
+- Study player review: per-choice markers (✓ green for correct, ✗ red for wrong selections, "Missed" label for unselected correct answers)
+- History detail: parses JSON array `userAnswer` for `multiple_select` and displays as comma-separated list
+- Content management: `multiple_select` option in type selector, checkbox-based correct answers picker, "Select" badge in question list
+- LLM prompt template: added `multiple_select` example, updated hard rules (rules 6-8), updated content rules for 3-type mix
+- SPECS.md: added `multiple_select` to Question type and `correctAnswers` field
+
 ### Changed
 
 - LLM prompt template updated with USER-SETTINGS block (student persona, difficulty level, question count) to match PROMPT.md

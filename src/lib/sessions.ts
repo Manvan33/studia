@@ -11,7 +11,7 @@ import type {
 	TopicBreakdown,
 	ChapterBreakdown
 } from './types';
-import { evaluateMultipleChoice, evaluateFreeText } from './evaluation';
+import { evaluateMultipleChoice, evaluateFreeText, evaluateMultipleSelect } from './evaluation';
 
 export async function createChapterSession(chapterId: string): Promise<StudySession> {
 	const chapter = await db.chapters.get(chapterId);
@@ -162,10 +162,14 @@ export async function submitAnswer(
 
 	let autoMatchedResult = null;
 	if (!skipped) {
-		autoMatchedResult =
-			question.type === 'multiple_choice'
-				? evaluateMultipleChoice(userAnswer, question.correctAnswer)
-				: evaluateFreeText(userAnswer, question.correctAnswer);
+		if (question.type === 'multiple_select' && question.correctAnswers) {
+			const userSelections: string[] = JSON.parse(userAnswer);
+			autoMatchedResult = evaluateMultipleSelect(userSelections, question.correctAnswers);
+		} else if (question.type === 'multiple_choice') {
+			autoMatchedResult = evaluateMultipleChoice(userAnswer, question.correctAnswer);
+		} else {
+			autoMatchedResult = evaluateFreeText(userAnswer, question.correctAnswer);
+		}
 	}
 
 	const answer: SessionAnswer = {

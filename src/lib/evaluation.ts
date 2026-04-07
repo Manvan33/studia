@@ -14,3 +14,13 @@ export function evaluateFreeText(userAnswer: string, correctAnswer: string): Ans
 
 	return normalize(userAnswer) === normalize(correctAnswer) ? 'correct' : 'incorrect';
 }
+
+export function evaluateMultipleSelect(
+	userAnswers: string[],
+	correctAnswers: string[]
+): AnswerResult {
+	if (userAnswers.length !== correctAnswers.length) return 'incorrect';
+	const sortedUser = [...userAnswers].sort();
+	const sortedCorrect = [...correctAnswers].sort();
+	return sortedUser.every((val, i) => val === sortedCorrect[i]) ? 'correct' : 'incorrect';
+}

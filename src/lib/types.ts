@@ -26,7 +26,7 @@ export interface Topic {
 	updatedAt: string;
 }
 
-export type QuestionType = 'multiple_choice' | 'free_text';
+export type QuestionType = 'multiple_choice' | 'free_text' | 'multiple_select';
 
 export interface Question {
 	id: string;
@@ -37,6 +37,7 @@ export interface Question {
 	context?: string;
 	choices?: string[];
 	correctAnswer: string;
+	correctAnswers?: string[];
 	explanation: string;
 	order: number;
 	tags?: string[];
@@ -140,7 +141,8 @@ export interface ImportQuestion {
 	prompt: string;
 	context?: string;
 	choices?: string[];
-	correctAnswer: string;
+	correctAnswer?: string;
+	correctAnswers?: string[];
 	explanation: string;
 	order: number;
 	tags?: string[];

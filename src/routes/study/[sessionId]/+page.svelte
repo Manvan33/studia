@@ -14,6 +14,7 @@
 	let currentIndex = $state(0);
 	let furthestIndex = $state(0);
 	let userAnswer = $state('');
+	let selectedChoices = $state<string[]>([]);
 	let showExplanation = $state(false);
 	let currentAnswer = $state<SessionAnswer | undefined>();
 	let loading = $state(true);
@@ -76,7 +77,7 @@
 
 	$effect(() => {
 		const q = currentQuestion;
-		if (q?.type === 'multiple_choice' && q.choices) {
+		if ((q?.type === 'multiple_choice' || q?.type === 'multiple_select') && q.choices) {
 			shuffledChoices = shuffle([...q.choices]);
 		} else {
 			shuffledChoices = [];
@@ -95,9 +96,11 @@
 		if (!currentQuestion || submitting) return;
 		submitting = true;
 
-		const answer = await submitAnswer(sessionId, currentQuestion.id, userAnswer, false);
-		currentAnswer = answer;
-		answers = [...answers, answer];
+		const answer =
+			currentQuestion.type === 'multiple_select' ? JSON.stringify(selectedChoices) : userAnswer;
+		const submittedAnswer = await submitAnswer(sessionId, currentQuestion.id, answer, false);
+		currentAnswer = submittedAnswer;
+		answers = [...answers, submittedAnswer];
 		showExplanation = true;
 		submitting = false;
 		if (currentIndex >= furthestIndex) {
@@ -130,6 +133,7 @@
 			currentAnswer = undefined;
 		}
 		userAnswer = '';
+		selectedChoices = [];
 		if (currentIndex > furthestIndex) {
 			furthestIndex = currentIndex;
 		}
@@ -147,6 +151,7 @@
 			currentAnswer = undefined;
 		}
 		userAnswer = '';
+		selectedChoices = [];
 	}
 
 	async function handleOverride(result: 'correct' | 'incorrect') {
@@ -163,6 +168,14 @@
 
 	function selectChoice(choice: string) {
 		userAnswer = choice;
+	}
+
+	function toggleChoice(choice: string) {
+		if (selectedChoices.includes(choice)) {
+			selectedChoices = selectedChoices.filter((c) => c !== choice);
+		} else {
+			selectedChoices = [...selectedChoices, choice];
+		}
 	}
 </script>
 
@@ -349,6 +362,48 @@
 							</button>
 						{/each}
 					</div>
+				{:else if currentQuestion.type === 'multiple_select' && shuffledChoices.length > 0}
+					<div class="mt-4 space-y-3">
+						<p class="text-xs font-medium tracking-wide text-gray-600 uppercase">
+							Select all that apply
+						</p>
+						<div class="space-y-2" role="group" aria-label="Answer choices — select all that apply">
+							{#each shuffledChoices as choice}
+								<button
+									onclick={() => toggleChoice(choice)}
+									class="flex w-full items-center gap-3 rounded-lg border-2 px-4 py-3 text-left text-sm transition-colors {selectedChoices.includes(
+										choice
+									)
+										? 'border-primary-500 bg-primary-50 font-medium text-primary-700'
+										: 'border-gray-200 hover:border-gray-300'}"
+								>
+									<div
+										class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 {selectedChoices.includes(
+											choice
+										)
+											? 'border-primary-500 bg-primary-500'
+											: 'border-gray-300'}"
+									>
+										{#if selectedChoices.includes(choice)}
+											<svg
+												class="h-3.5 w-3.5 text-white"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke="currentColor"
+												stroke-width="3"
+												><path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													d="M5 13l4 4L19 7"
+												/></svg
+											>
+										{/if}
+									</div>
+									<span>{choice}</span>
+								</button>
+							{/each}
+						</div>
+					</div>
 				{:else}
 					<label for="free-text-answer" class="sr-only">Your answer</label>
 					<textarea
@@ -371,7 +426,9 @@
 					{/if}
 					<button
 						onclick={handleSubmit}
-						disabled={!userAnswer.trim() || submitting}
+						disabled={(currentQuestion.type === 'multiple_select'
+							? selectedChoices.length === 0
+							: !userAnswer.trim()) || submitting}
 						class="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						Submit Answer
@@ -444,11 +501,29 @@
 									<span class="text-xs text-gray-500">(manually overridden)</span>
 								{/if}
 							</div>
-							<p class="mt-1 text-sm text-gray-600">Your answer: {currentAnswer.userAnswer}</p>
-							{#if currentAnswer.finalResult === 'incorrect'}
+							{#if currentQuestion.type === 'multiple_select'}
+								{@const userSelections = (() => {
+									try {
+										return JSON.parse(currentAnswer.userAnswer);
+									} catch {
+										return [];
+									}
+								})()}
 								<p class="mt-1 text-sm text-gray-600">
-									Correct answer: {currentQuestion.correctAnswer}
+									Your answers: {userSelections.join(', ')}
 								</p>
+								{#if currentAnswer.finalResult === 'incorrect'}
+									<p class="mt-1 text-sm text-gray-600">
+										Correct answers: {(currentQuestion.correctAnswers ?? []).join(', ')}
+									</p>
+								{/if}
+							{:else}
+								<p class="mt-1 text-sm text-gray-600">Your answer: {currentAnswer.userAnswer}</p>
+								{#if currentAnswer.finalResult === 'incorrect'}
+									<p class="mt-1 text-sm text-gray-600">
+										Correct answer: {currentQuestion.correctAnswer}
+									</p>
+								{/if}
 							{/if}
 						</div>
 					{/if}
@@ -504,9 +579,78 @@
 									>
 										{choice}
 									</span>
-									{#if isCorrectChoice}
+									{#if isCorrectChoice && currentAnswer.finalResult !== 'correct'}
 										<span class="ml-auto text-xs font-medium text-green-600">Correct answer</span>
 									{:else if isUserChoice && !isCorrectChoice}
+										<span class="ml-auto text-xs font-medium text-red-600">Your answer</span>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{:else if currentQuestion.type === 'multiple_select' && shuffledChoices.length > 0 && !currentAnswer.skipped}
+						{@const userSelections = (() => {
+							try {
+								return JSON.parse(currentAnswer.userAnswer);
+							} catch {
+								return [];
+							}
+						})()}
+						{@const correctAnswers = currentQuestion.correctAnswers ?? []}
+						<div class="space-y-2" aria-label="Answer review">
+							{#each shuffledChoices as choice}
+								{@const isCorrectChoice = correctAnswers.includes(choice)}
+								{@const isUserChoice = userSelections.includes(choice)}
+								<div
+									class="flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-sm
+									{isCorrectChoice && isUserChoice
+										? 'border-green-300 bg-green-50'
+										: isCorrectChoice && !isUserChoice
+											? 'border-green-300 bg-green-50'
+											: !isCorrectChoice && isUserChoice
+												? 'border-red-300 bg-red-50'
+												: 'border-gray-100 bg-gray-50 opacity-60'}"
+								>
+									{#if isCorrectChoice}
+										<svg
+											class="h-4 w-4 shrink-0 text-green-600"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											stroke-width="2.5"
+											><path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												d="M5 13l4 4L19 7"
+											/></svg
+										>
+									{:else if isUserChoice}
+										<svg
+											class="h-4 w-4 shrink-0 text-red-600"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											stroke-width="2.5"
+											><path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												d="M6 18L18 6M6 6l12 12"
+											/></svg
+										>
+									{:else}
+										<span class="h-4 w-4 shrink-0"></span>
+									{/if}
+									<span
+										class={isCorrectChoice
+											? 'font-medium text-green-800'
+											: isUserChoice && !isCorrectChoice
+												? 'font-medium text-red-800'
+												: 'text-gray-500'}
+									>
+										{choice}
+									</span>
+									{#if isCorrectChoice && !isUserChoice}
+										<span class="ml-auto text-xs font-medium text-green-600">Missed</span>
+									{:else if !isCorrectChoice && isUserChoice}
 										<span class="ml-auto text-xs font-medium text-red-600">Your answer</span>
 									{/if}
 								</div>
