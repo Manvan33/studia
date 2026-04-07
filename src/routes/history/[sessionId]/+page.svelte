@@ -1,0 +1,170 @@
+<script lang="ts">
+	import { page } from '$app/state';
+	import { db } from '$lib/db';
+	import type { StudySession, SessionAnswer, Question, Chapter, Topic } from '$lib/types';
+
+	const sessionId = $derived(page.params.sessionId ?? '');
+
+	let session = $state<StudySession | undefined>();
+	let answers = $state<SessionAnswer[]>([]);
+	let questions = $state<Question[]>([]);
+	let chapters = $state<Chapter[]>([]);
+	let topics = $state<Topic[]>([]);
+	let loading = $state(true);
+
+	$effect(() => {
+		loadData();
+	});
+
+	async function loadData() {
+		loading = true;
+		const s = await db.sessions.get(sessionId);
+		if (!s) {
+			loading = false;
+			return;
+		}
+		session = s;
+
+		const qs = await db.questions.bulkGet(s.questionIds);
+		questions = qs.filter((q): q is Question => q !== undefined);
+
+		answers = await db.sessionAnswers.where('sessionId').equals(sessionId).toArray();
+
+		const chapterIds = [...new Set(questions.map((q) => q.chapterId))];
+		const chs = await db.chapters.bulkGet(chapterIds);
+		chapters = chs.filter((c): c is Chapter => c !== undefined);
+
+		const topicIds = [...new Set(questions.map((q) => q.topicId).filter(Boolean))] as string[];
+		const ts = await db.topics.bulkGet(topicIds);
+		topics = ts.filter((t): t is Topic => t !== undefined);
+
+		loading = false;
+	}
+
+	function formatDate(iso: string): string {
+		return new Date(iso).toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
+
+	function formatDuration(ms: number | undefined): string {
+		if (!ms) return '—';
+		const minutes = Math.floor(ms / 60000);
+		const seconds = Math.floor((ms % 60000) / 1000);
+		return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+	}
+
+	function getAnswer(questionId: string): SessionAnswer | undefined {
+		return answers.find((a) => a.questionId === questionId);
+	}
+
+	function getTopicTitle(topicId: string | undefined): string {
+		if (!topicId) return 'Final Assessment';
+		return topics.find((t) => t.id === topicId)?.title ?? 'Unknown';
+	}
+</script>
+
+{#if loading}
+	<p class="py-10 text-center text-gray-500">Loading...</p>
+{:else if !session}
+	<div class="py-10 text-center">
+		<p class="text-gray-500">Session not found</p>
+		<a href="/history" class="mt-2 text-primary-600 hover:text-primary-700">Back to History</a>
+	</div>
+{:else}
+	<div class="space-y-6">
+		<div>
+			<a href="/history" class="text-sm text-primary-600 hover:text-primary-700">&larr; All Sessions</a>
+			<h1 class="mt-2 text-2xl font-bold text-gray-900">Session Summary</h1>
+			<p class="text-sm text-gray-500">{formatDate(session.createdAt)}</p>
+		</div>
+
+		{#if session.scoring}
+			<div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+				<div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
+					<p class="text-2xl font-bold text-primary-700">{session.scoring.scorePercentage}%</p>
+					<p class="text-xs text-gray-500">Score</p>
+				</div>
+				<div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
+					<p class="text-2xl font-bold text-success-600">{session.scoring.correct}</p>
+					<p class="text-xs text-gray-500">Correct</p>
+				</div>
+				<div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
+					<p class="text-2xl font-bold text-error-600">{session.scoring.incorrect}</p>
+					<p class="text-xs text-gray-500">Incorrect</p>
+				</div>
+				<div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
+					<p class="text-2xl font-bold text-gray-400">{session.scoring.skipped}</p>
+					<p class="text-xs text-gray-500">Skipped</p>
+				</div>
+				<div class="rounded-xl border border-gray-200 bg-white p-4 text-center">
+					<p class="text-2xl font-bold text-gray-700">{formatDuration(session.scoring.durationMs)}</p>
+					<p class="text-xs text-gray-500">Duration</p>
+				</div>
+			</div>
+
+			{#if session.scoring.perTopicBreakdown}
+				<div>
+					<h2 class="mb-3 text-lg font-semibold text-gray-800">Per Topic</h2>
+					<div class="space-y-2">
+						{#each Object.values(session.scoring.perTopicBreakdown) as breakdown}
+							<div class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
+								<span class="text-sm font-medium text-gray-900">{breakdown.topicTitle}</span>
+								<div class="flex gap-3 text-sm">
+									<span class="text-success-600">{breakdown.correct}✓</span>
+									<span class="text-error-600">{breakdown.incorrect}✗</span>
+									{#if breakdown.skipped > 0}
+										<span class="text-gray-400">{breakdown.skipped} skip</span>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		{/if}
+
+		<div>
+			<h2 class="mb-3 text-lg font-semibold text-gray-800">Questions & Answers</h2>
+			<div class="space-y-3">
+				{#each questions as question, i}
+					{@const answer = getAnswer(question.id)}
+					<div class="rounded-xl border border-gray-200 bg-white p-4">
+						<div class="flex items-start gap-3">
+							<span
+								class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold {answer?.finalResult === 'correct'
+									? 'bg-green-100 text-green-700'
+									: answer?.finalResult === 'incorrect'
+										? 'bg-red-100 text-red-700'
+										: 'bg-gray-100 text-gray-500'}"
+							>
+								{i + 1}
+							</span>
+							<div class="flex-1">
+								<p class="text-sm font-medium text-gray-900">{question.prompt}</p>
+								<p class="mt-1 text-xs text-gray-400">{getTopicTitle(question.topicId)}</p>
+
+								{#if answer}
+									<div class="mt-2 text-sm">
+										{#if answer.skipped}
+											<p class="text-gray-400">Skipped</p>
+										{:else}
+											<p class="text-gray-600">Your answer: {answer.userAnswer}</p>
+										{/if}
+										{#if answer.finalResult === 'incorrect'}
+											<p class="text-success-600">Correct: {question.correctAnswer}</p>
+										{/if}
+									</div>
+								{/if}
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+{/if}
