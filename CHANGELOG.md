@@ -24,3 +24,8 @@ All notable changes to this project will be documented in this file.
 - Responsive layout with mobile hamburger navigation
 - Progress bar during study sessions
 - Explanation display after each answer submission
+- Progress dashboard with stat cards, theme overview, recent sessions, chapter progress bars
+- Weak topics/chapters identification and display
+- Frequently missed questions tracking
+- Final assessment performance by chapter
+- Per-question progress tracking (times seen, correct, incorrect, last answered)

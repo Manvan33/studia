@@ -8,4 +8,5 @@ export {
 	overrideAnswer,
 	completeSession
 } from './sessions';
+export { getProgressStats } from './progress';
 export type * from './types';
