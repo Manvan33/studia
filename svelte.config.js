@@ -1,5 +1,8 @@
 import adapter from '@sveltejs/adapter-static';
 
+const dev = process.argv.includes('dev');
+const repo = 'studia';
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	compilerOptions: {
@@ -8,8 +11,11 @@ const config = {
 	},
 	kit: {
 		adapter: adapter({
-			fallback: '200.html'
-		})
+			fallback: '404.html'
+		}),
+		paths: {
+			base: dev ? '' : `/${repo}`
+		}
 	}
 };
 

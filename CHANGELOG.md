@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- GitHub Pages deployment workflow via GitHub Actions (`.github/workflows/deploy-pages.yml`) that builds and deploys static output from `build/`
 - Full database export/import: backup and restore all data via Manage → Database Backup (`/manage/data`)
 - Export toggle to include or exclude study sessions (history, answers, per-question progress)
 - Import supports replace (clear existing) or merge mode
@@ -32,6 +33,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- SvelteKit static fallback changed to `404.html` and `kit.paths.base` configured for GitHub Pages project repository deployment (`/studia` in production)
 - Dashboard redesigned to a compact theme-focused layout with selectable theme panel and per-theme detail view
 - Dashboard chapter progress now shows chapter score alongside answered count
 - Dashboard theme detail stats removed redundant plain "Chapters" and "Questions" cards in favor of studied/tried metrics
