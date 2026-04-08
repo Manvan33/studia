@@ -16,6 +16,9 @@
 	let showAddTopic = $state(false);
 	let newTopicTitle = $state('');
 	let confirmDelete = $state(false);
+	let savingChapter = $state(false);
+	let saveMessage = $state('');
+	let saveMessageType = $state<'success' | 'error'>('success');
 
 	$effect(() => {
 		const id = chapterId;
@@ -28,9 +31,11 @@
 				}
 			}
 		});
-		const sub2 = liveQuery(() => db.topics.where('chapterId').equals(id).sortBy('order')).subscribe({
-			next: (v) => (topics = v)
-		});
+		const sub2 = liveQuery(() => db.topics.where('chapterId').equals(id).sortBy('order')).subscribe(
+			{
+				next: (v) => (topics = v)
+			}
+		);
 		const sub3 = liveQuery(() => db.questions.where('chapterId').equals(id).toArray()).subscribe({
 			next: (v) => (questions = v)
 		});
@@ -42,12 +47,32 @@
 	});
 
 	async function saveChapter() {
-		if (!editingTitle.trim()) return;
-		await db.chapters.update(chapterId, {
-			title: editingTitle.trim(),
-			description: editingDescription.trim() || undefined,
-			updatedAt: new Date().toISOString()
-		});
+		if (!editingTitle.trim()) {
+			saveMessageType = 'error';
+			saveMessage = 'Title is required';
+			return;
+		}
+
+		savingChapter = true;
+		saveMessage = '';
+
+		try {
+			await db.chapters.update(chapterId, {
+				title: editingTitle.trim(),
+				description: editingDescription.trim() || undefined,
+				updatedAt: new Date().toISOString()
+			});
+			saveMessageType = 'success';
+			saveMessage = 'Changes saved';
+			setTimeout(() => {
+				saveMessage = '';
+			}, 2000);
+		} catch {
+			saveMessageType = 'error';
+			saveMessage = 'Failed to save changes';
+		} finally {
+			savingChapter = false;
+		}
 	}
 
 	async function addTopic() {
@@ -85,31 +110,55 @@
 {#if chapter}
 	<div class="mx-auto max-w-2xl space-y-6">
 		<div>
-			<a href="/manage/themes/{chapter.themeId}" class="text-sm text-primary-600 hover:text-primary-700">&larr; Back to Theme</a>
+			<a
+				href="/manage/themes/{chapter.themeId}"
+				class="text-sm text-primary-600 hover:text-primary-700">&larr; Back to Theme</a
+			>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Chapter</h1>
 		</div>
 
 		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 			<div class="space-y-4">
+				{#if saveMessage}
+					<div
+						class="rounded-lg px-3 py-2 text-sm {saveMessageType === 'success'
+							? 'border border-green-200 bg-green-50 text-green-700'
+							: 'border border-red-200 bg-red-50 text-red-700'}"
+					>
+						{saveMessage}
+					</div>
+				{/if}
 				<div>
 					<label for="ch-title" class="mb-1 block text-sm font-medium text-gray-700">Title</label>
 					<input
 						id="ch-title"
 						bind:value={editingTitle}
+						oninput={() => {
+							saveMessage = '';
+						}}
 						class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
 					/>
 				</div>
 				<div>
-					<label for="ch-desc" class="mb-1 block text-sm font-medium text-gray-700">Description</label>
+					<label for="ch-desc" class="mb-1 block text-sm font-medium text-gray-700"
+						>Description</label
+					>
 					<textarea
 						id="ch-desc"
 						bind:value={editingDescription}
+						oninput={() => {
+							saveMessage = '';
+						}}
 						rows="2"
 						class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
 					></textarea>
 				</div>
-				<button onclick={saveChapter} class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">
-					Save Changes
+				<button
+					onclick={saveChapter}
+					disabled={savingChapter}
+					class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					{savingChapter ? 'Saving...' : 'Save Changes'}
 				</button>
 				<a
 					href="/manage/chapters/{chapterId}/json"
@@ -139,7 +188,10 @@
 							placeholder="Topic title"
 							class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
 						/>
-						<button onclick={addTopic} class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">
+						<button
+							onclick={addTopic}
+							class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+						>
 							Add
 						</button>
 					</div>
@@ -173,16 +225,25 @@
 				<div class="rounded-lg border border-red-200 bg-red-50 p-4">
 					<p class="text-sm text-red-700">Delete this chapter and all its content?</p>
 					<div class="mt-3 flex gap-3">
-						<button onclick={deleteChapter} class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+						<button
+							onclick={deleteChapter}
+							class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+						>
 							Yes, Delete
 						</button>
-						<button onclick={() => (confirmDelete = false)} class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+						<button
+							onclick={() => (confirmDelete = false)}
+							class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+						>
 							Cancel
 						</button>
 					</div>
 				</div>
 			{:else}
-				<button onclick={() => (confirmDelete = true)} class="text-sm text-red-600 hover:text-red-700">
+				<button
+					onclick={() => (confirmDelete = true)}
+					class="text-sm text-red-600 hover:text-red-700"
+				>
 					Delete Chapter
 				</button>
 			{/if}

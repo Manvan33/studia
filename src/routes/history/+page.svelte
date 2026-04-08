@@ -25,17 +25,25 @@
 	});
 
 	function getThemeTitle(themeIds: string[]): string {
-		return themeIds
-			.map((id) => themes.find((t) => t.id === id)?.title)
-			.filter(Boolean)
-			.join(', ') || '';
+		return (
+			themeIds
+				.map((id) => themes.find((t) => t.id === id)?.title)
+				.filter(Boolean)
+				.join(', ') || ''
+		);
+	}
+
+	function getPrimaryThemeTitle(themeIds: string[]): string {
+		return getThemeTitle(themeIds) || 'Theme';
 	}
 
 	function getChapterTitles(chapterIds: string[]): string {
-		return chapterIds
-			.map((id) => chapterMap.get(id)?.title)
-			.filter(Boolean)
-			.join(', ') || '';
+		return (
+			chapterIds
+				.map((id) => chapterMap.get(id)?.title)
+				.filter(Boolean)
+				.join(', ') || ''
+		);
 	}
 
 	function formatDate(iso: string): string {
@@ -54,16 +62,6 @@
 		const seconds = Math.floor((ms % 60000) / 1000);
 		return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
 	}
-
-	function sessionTypeLabel(type: string): string {
-		switch (type) {
-			case 'chapter': return 'Chapter';
-			case 'custom': return 'Custom';
-			case 'wrong_only': return 'Review';
-			case 'final_assessment': return 'Final';
-			default: return type;
-		}
-	}
 </script>
 
 <div class="space-y-6">
@@ -78,29 +76,20 @@
 		<div class="space-y-3">
 			{#each sessions as session}
 				<a
-					href="{session.completedAt ? `/history/${session.id}` : `/study/${session.id}`}"
+					href={session.completedAt ? `/history/${session.id}` : `/study/${session.id}`}
 					class="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
 				>
 					<div class="flex items-center justify-between">
 						<div>
 							<span
-								class="inline-block rounded-full px-2 py-0.5 text-xs font-medium {session.type ===
-								'chapter'
-									? 'bg-blue-100 text-blue-700'
-									: session.type === 'custom'
-										? 'bg-purple-100 text-purple-700'
-										: session.type === 'wrong_only'
-											? 'bg-red-100 text-red-700'
-											: 'bg-amber-100 text-amber-700'}"
+								class="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
 							>
-								{sessionTypeLabel(session.type)}
+								{getPrimaryThemeTitle(session.themeIds)}
 							</span>
 							<span class="ml-2 text-sm text-gray-500">{formatDate(session.createdAt)}</span>
-							{#if getThemeTitle(session.themeIds) || getChapterTitles(session.chapterIds)}
+							{#if getChapterTitles(session.chapterIds)}
 								<p class="mt-0.5 text-xs text-gray-500">
-									{#if getThemeTitle(session.themeIds)}<span class="font-medium text-gray-700">{getThemeTitle(session.themeIds)}</span>{/if}
-									{#if getThemeTitle(session.themeIds) && getChapterTitles(session.chapterIds)} · {/if}
-									{#if getChapterTitles(session.chapterIds)}{getChapterTitles(session.chapterIds)}{/if}
+									{getChapterTitles(session.chapterIds)}
 								</p>
 							{/if}
 						</div>
@@ -115,7 +104,8 @@
 								</p>
 							</div>
 						{:else if !session.completedAt}
-							<span class="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700"
+							<span
+								class="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700"
 								>In Progress</span
 							>
 						{/if}

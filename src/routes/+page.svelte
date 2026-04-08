@@ -40,17 +40,31 @@
 	});
 
 	function getThemeTitle(themeIds: string[]): string {
-		return themeIds
-			.map((id) => themes.find((t) => t.id === id)?.title)
-			.filter(Boolean)
-			.join(', ') || '';
+		return (
+			themeIds
+				.map((id) => themes.find((t) => t.id === id)?.title)
+				.filter(Boolean)
+				.join(', ') || ''
+		);
+	}
+
+	function getPrimaryThemeTitle(themeIds: string[]): string {
+		return getThemeTitle(themeIds) || 'Theme';
 	}
 
 	function getChapterTitles(chapterIds: string[]): string {
-		return chapterIds
-			.map((id) => chapterMap.get(id)?.title)
-			.filter(Boolean)
-			.join(', ') || '';
+		return (
+			chapterIds
+				.map((id) => chapterMap.get(id)?.title)
+				.filter(Boolean)
+				.join(', ') || ''
+		);
+	}
+
+	function getThemeTitleForChapter(chapterId: string): string {
+		const chapter = chapterMap.get(chapterId);
+		if (!chapter) return 'Theme';
+		return themes.find((theme) => theme.id === chapter.themeId)?.title ?? 'Theme';
 	}
 
 	async function loadStats() {
@@ -114,33 +128,47 @@
 						>
 							<div class="flex items-center gap-3">
 								<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100">
-									<svg class="h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+									<svg
+										class="h-5 w-5 text-primary-600"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+										stroke-width="2"
+										><path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+										/><path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+										/></svg
+									>
 								</div>
 								<div>
 									<span
-										class="inline-block rounded-full px-2 py-0.5 text-xs font-medium {session.type ===
-										'chapter'
-											? 'bg-blue-100 text-blue-700'
-											: session.type === 'custom'
-												? 'bg-purple-100 text-purple-700'
-												: session.type === 'wrong_only'
-													? 'bg-red-100 text-red-700'
-													: 'bg-amber-100 text-amber-700'}"
+										class="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
 									>
-										{session.type.replace('_', ' ')}
+										{getPrimaryThemeTitle(session.themeIds)}
 									</span>
-									{#if getThemeTitle(session.themeIds)}
-										<p class="mt-0.5 text-sm font-medium text-gray-800">{getThemeTitle(session.themeIds)}</p>
-									{/if}
 									{#if getChapterTitles(session.chapterIds)}
 										<p class="text-xs text-gray-500">{getChapterTitles(session.chapterIds)}</p>
 									{/if}
-									<p class="mt-0.5 text-xs text-gray-400">Started {formatDate(session.createdAt)}</p>
+									<p class="mt-0.5 text-xs text-gray-400">
+										Started {formatDate(session.createdAt)}
+									</p>
 								</div>
 							</div>
 							<div class="flex items-center gap-2 text-sm font-medium text-primary-700">
 								Resume
-								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+								<svg
+									class="h-4 w-4"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+									stroke-width="2"
+									><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg
+								>
 							</div>
 						</a>
 					{/each}
@@ -178,25 +206,16 @@
 								href="/history/{session.id}"
 								class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 transition-shadow hover:shadow-sm"
 							>
-							<div>
+								<div>
 									<span
-										class="inline-block rounded-full px-2 py-0.5 text-xs font-medium {session.type ===
-										'chapter'
-											? 'bg-blue-100 text-blue-700'
-											: session.type === 'custom'
-												? 'bg-purple-100 text-purple-700'
-												: session.type === 'wrong_only'
-													? 'bg-red-100 text-red-700'
-													: 'bg-amber-100 text-amber-700'}"
+										class="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
 									>
-										{session.type.replace('_', ' ')}
+										{getPrimaryThemeTitle(session.themeIds)}
 									</span>
 									<span class="ml-2 text-sm text-gray-500">{formatDate(session.createdAt)}</span>
-									{#if getThemeTitle(session.themeIds) || getChapterTitles(session.chapterIds)}
+									{#if getChapterTitles(session.chapterIds)}
 										<p class="mt-0.5 text-xs text-gray-500">
-											{#if getThemeTitle(session.themeIds)}<span class="font-medium text-gray-700">{getThemeTitle(session.themeIds)}</span>{/if}
-											{#if getThemeTitle(session.themeIds) && getChapterTitles(session.chapterIds)} · {/if}
-											{#if getChapterTitles(session.chapterIds)}{getChapterTitles(session.chapterIds)}{/if}
+											{getChapterTitles(session.chapterIds)}
 										</p>
 									{/if}
 								</div>
@@ -227,7 +246,14 @@
 						{#each stats.chapterCompletionStatus as chapter}
 							<div class="rounded-lg border border-gray-200 bg-white px-4 py-3">
 								<div class="flex items-center justify-between">
-									<span class="text-sm font-medium text-gray-900">{chapter.chapterTitle}</span>
+									<div class="flex items-center gap-2">
+										<span
+											class="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
+										>
+											{getThemeTitleForChapter(chapter.chapterId)}
+										</span>
+										<span class="text-sm font-medium text-gray-900">{chapter.chapterTitle}</span>
+									</div>
 									<span class="text-sm text-gray-500">
 										{chapter.answeredQuestions}/{chapter.totalQuestions} answered
 									</span>
@@ -235,7 +261,8 @@
 								{#if chapter.totalQuestions > 0}
 									<div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-100">
 										<div
-											class="h-full rounded-full transition-all duration-300 {chapter.correctRate >= 70
+											class="h-full rounded-full transition-all duration-300 {chapter.correctRate >=
+											70
 												? 'bg-success-500'
 												: chapter.correctRate >= 40
 													? 'bg-warning-500'
@@ -256,7 +283,9 @@
 						<h2 class="mb-3 text-lg font-semibold text-gray-800">Weak Topics</h2>
 						<div class="space-y-2">
 							{#each stats.weakTopics as topic}
-								<div class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
+								<div
+									class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3"
+								>
 									<span class="text-sm text-gray-900">{topic.title}</span>
 									<span
 										class="text-sm font-medium {topic.correctRate >= 70
@@ -278,7 +307,9 @@
 						<h2 class="mb-3 text-lg font-semibold text-gray-800">Weak Chapters</h2>
 						<div class="space-y-2">
 							{#each stats.weakChapters as chapter}
-								<div class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
+								<div
+									class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3"
+								>
 									<span class="text-sm text-gray-900">{chapter.title}</span>
 									<span
 										class="text-sm font-medium {chapter.correctRate >= 70
@@ -320,11 +351,15 @@
 					<h2 class="mb-3 text-lg font-semibold text-gray-800">Final Assessment Performance</h2>
 					<div class="space-y-2">
 						{#each stats.finalAssessmentPerformance as fa}
-							<div class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
+							<div
+								class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3"
+							>
 								<span class="text-sm text-gray-900">{fa.chapterTitle}</span>
 								<div class="text-right">
 									{#if fa.attempted}
-										<span class="text-sm font-medium text-gray-900">{fa.correct}/{fa.totalQuestions}</span>
+										<span class="text-sm font-medium text-gray-900"
+											>{fa.correct}/{fa.totalQuestions}</span
+										>
 										<span class="ml-1 text-xs text-gray-400">correct</span>
 									{:else}
 										<span class="text-xs text-gray-400">Not attempted</span>
