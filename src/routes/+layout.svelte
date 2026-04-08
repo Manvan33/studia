@@ -1,6 +1,6 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
+	import favicon from '$lib/assets/studia-icon.png';
 	import { page } from '$app/state';
 
 	let { children } = $props();
@@ -21,7 +21,7 @@
 	}
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:head><link rel="icon" type="image/png" href={favicon} /></svelte:head>
 
 <div class="flex min-h-screen flex-col bg-gray-50">
 	<header class="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm">

@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Replaced app favicon with `studia-icon.png`
 - GitHub Pages workflow upgraded to Node 24-compatible action majors (`checkout@v6`, `setup-node@v6`, `configure-pages@v6`, `upload-pages-artifact@v4`, `deploy-pages@v5`) and now sets `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`
 - SvelteKit static fallback changed to `404.html` and `kit.paths.base` configured for GitHub Pages project repository deployment (`/studia` in production)
 - Dashboard redesigned to a compact theme-focused layout with selectable theme panel and per-theme detail view
