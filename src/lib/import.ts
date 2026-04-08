@@ -327,6 +327,64 @@ function buildQuestion(
 	};
 }
 
+export async function exportThemeAsJson(themeId: string): Promise<ImportData> {
+	const theme = await db.themes.get(themeId);
+	if (!theme) throw new Error('Theme not found');
+
+	const chapters = await db.chapters.where('themeId').equals(themeId).sortBy('order');
+	const exportChapters: ImportChapter[] = [];
+
+	for (const chapter of chapters) {
+		const topics = await db.topics.where('chapterId').equals(chapter.id).sortBy('order');
+
+		const topicQuestions = await db.questions
+			.where('chapterId')
+			.equals(chapter.id)
+			.and((q) => !q.isFinalAssessment)
+			.toArray();
+
+		const finalQuestions = await db.questions
+			.where('chapterId')
+			.equals(chapter.id)
+			.and((q) => q.isFinalAssessment)
+			.sortBy('order');
+
+		const exportTopics: ImportTopic[] = topics.map((topic) => {
+			const questions = topicQuestions
+				.filter((question) => question.topicId === topic.id)
+				.sort((a, b) => a.order - b.order);
+
+			return {
+				title: topic.title,
+				...(topic.description ? { description: topic.description } : {}),
+				order: topic.order,
+				questions: questions.map(questionToImport)
+			};
+		});
+
+		const exportChapter: ImportChapter = {
+			title: chapter.title,
+			...(chapter.description ? { description: chapter.description } : {}),
+			order: chapter.order,
+			topics: exportTopics
+		};
+
+		if (finalQuestions.length > 0) {
+			exportChapter.finalAssessment = finalQuestions.map(questionToImport);
+		}
+
+		exportChapters.push(exportChapter);
+	}
+
+	return {
+		theme: {
+			title: theme.title,
+			...(theme.description ? { description: theme.description } : {})
+		},
+		chapters: exportChapters
+	};
+}
+
 export async function exportChapterAsJson(chapterId: string): Promise<ImportChapter> {
 	const chapter = await db.chapters.get(chapterId);
 	if (!chapter) throw new Error('Chapter not found');
@@ -443,6 +501,82 @@ export async function updateChapterFromJson(chapterId: string, data: ImportChapt
 
 		await db.topics.bulkAdd(newTopics);
 		await db.questions.bulkAdd(newQuestions);
+	});
+}
+
+export async function updateThemeFromJson(themeId: string, data: ImportData): Promise<void> {
+	const theme = await db.themes.get(themeId);
+	if (!theme) throw new Error('Theme not found');
+
+	const now = new Date().toISOString();
+	const newChapters: Chapter[] = [];
+	const newTopics: Topic[] = [];
+	const newQuestions: Question[] = [];
+
+	for (const importChapter of data.chapters) {
+		const chapterId = nanoid();
+
+		newChapters.push({
+			id: chapterId,
+			themeId,
+			title: importChapter.title,
+			description: importChapter.description,
+			order: importChapter.order,
+			createdAt: now,
+			updatedAt: now
+		});
+
+		for (const importTopic of importChapter.topics) {
+			const topicId = nanoid();
+
+			newTopics.push({
+				id: topicId,
+				chapterId,
+				title: importTopic.title,
+				description: importTopic.description,
+				order: importTopic.order,
+				createdAt: now,
+				updatedAt: now
+			});
+
+			for (const importQuestion of importTopic.questions) {
+				newQuestions.push(buildQuestion(importQuestion, chapterId, topicId, false, now));
+			}
+		}
+
+		if (importChapter.finalAssessment) {
+			for (const importQuestion of importChapter.finalAssessment) {
+				newQuestions.push(buildQuestion(importQuestion, chapterId, undefined, true, now));
+			}
+		}
+	}
+
+	await db.transaction('rw', [db.themes, db.chapters, db.topics, db.questions], async () => {
+		const existingChapterIds = (await db.chapters.where('themeId').equals(themeId).toArray()).map(
+			(chapter) => chapter.id
+		);
+
+		if (existingChapterIds.length > 0) {
+			await db.questions.where('chapterId').anyOf(existingChapterIds).delete();
+			await db.topics.where('chapterId').anyOf(existingChapterIds).delete();
+			await db.chapters.bulkDelete(existingChapterIds);
+		}
+
+		await db.themes.update(themeId, {
+			title: data.theme.title,
+			description: data.theme.description,
+			updatedAt: now
+		});
+
+		if (newChapters.length > 0) {
+			await db.chapters.bulkAdd(newChapters);
+		}
+		if (newTopics.length > 0) {
+			await db.topics.bulkAdd(newTopics);
+		}
+		if (newQuestions.length > 0) {
+			await db.questions.bulkAdd(newQuestions);
+		}
 	});
 }
 

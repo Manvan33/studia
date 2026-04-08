@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Manage Theme: drag-handle chapter reordering with persisted chapter `order`
+- Manage Theme: "Sort by name" action to alphabetize chapters and save new order
+- Manage Theme: theme-level JSON editor (`/manage/themes/:id/json`) with copy, validate, preview, and apply flow
+- Theme dashboard stats: added "Chapters Studied" and "Questions Tried" metrics
 - **Multiple select ("select all that apply") question type**: new `multiple_select` type alongside `multiple_choice` and `free_text`
 - Import validation: `multiple_select` questions require `choices` (≥2) and `correctAnswers` array (≥1, each must match a choice); must not have `correctAnswer`
 - Import/export: `buildQuestion` and `questionToImport` handle `correctAnswers` field for `multiple_select`
@@ -18,6 +22,10 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Dashboard redesigned to a compact theme-focused layout with selectable theme panel and per-theme detail view
+- Dashboard chapter progress now shows chapter score alongside answered count
+- Dashboard theme detail stats removed redundant plain "Chapters" and "Questions" cards in favor of studied/tried metrics
+- Manage Theme page now includes an "Edit as JSON" button in the theme edit card
 - Study player MCQ review now relies on in-list answer highlighting/badges (removed redundant top result summary card for MCQ)
 - Import page drag-and-drop now captures dropped JSON files in-app instead of allowing browser navigation to the file
 
