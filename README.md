@@ -38,49 +38,49 @@ The app imports structured JSON at the theme level. Example:
 
 ```json
 {
-  "theme": {
-    "title": "CWNA",
-    "description": "Certified Wireless Network Administrator"
-  },
-  "chapters": [
-    {
-      "title": "Chapter 1",
-      "order": 1,
-      "topics": [
-        {
-          "title": "RF Basics",
-          "order": 1,
-          "questions": [
-            {
-              "type": "multiple_choice",
-              "prompt": "What does RF stand for?",
-              "choices": ["Radio Frequency", "Routing Function", "Random Frame"],
-              "correctAnswer": "Radio Frequency",
-              "explanation": "RF stands for Radio Frequency.",
-              "order": 1
-            },
-            {
-              "type": "free_text",
-              "prompt": "Name the 2.4 GHz Wi-Fi standard for older WLANs.",
-              "correctAnswer": "802.11b",
-              "explanation": "802.11b operates in the 2.4 GHz band.",
-              "order": 2
-            }
-          ]
-        }
-      ],
-      "finalAssessment": [
-        {
-          "type": "multiple_choice",
-          "prompt": "Which band is used by both 802.11b and 802.11g?",
-          "choices": ["2.4 GHz", "5 GHz", "6 GHz"],
-          "correctAnswer": "2.4 GHz",
-          "explanation": "Both 802.11b and 802.11g use the 2.4 GHz band.",
-          "order": 1
-        }
-      ]
-    }
-  ]
+	"theme": {
+		"title": "CWNA",
+		"description": "Certified Wireless Network Administrator"
+	},
+	"chapters": [
+		{
+			"title": "Chapter 1",
+			"order": 1,
+			"topics": [
+				{
+					"title": "RF Basics",
+					"order": 1,
+					"questions": [
+						{
+							"type": "multiple_choice",
+							"prompt": "What does RF stand for?",
+							"choices": ["Radio Frequency", "Routing Function", "Random Frame"],
+							"correctAnswer": "Radio Frequency",
+							"explanation": "RF stands for Radio Frequency.",
+							"order": 1
+						},
+						{
+							"type": "free_text",
+							"prompt": "Name the 2.4 GHz Wi-Fi standard for older WLANs.",
+							"correctAnswer": "802.11b",
+							"explanation": "802.11b operates in the 2.4 GHz band.",
+							"order": 2
+						}
+					]
+				}
+			],
+			"finalAssessment": [
+				{
+					"type": "multiple_choice",
+					"prompt": "Which band is used by both 802.11b and 802.11g?",
+					"choices": ["2.4 GHz", "5 GHz", "6 GHz"],
+					"correctAnswer": "2.4 GHz",
+					"explanation": "Both 802.11b and 802.11g use the 2.4 GHz band.",
+					"order": 1
+				}
+			]
+		}
+	]
 }
 ```
 
@@ -88,18 +88,18 @@ Paste JSON or upload a file on the Import page. The app validates before saving 
 
 ## Screens
 
-| Screen | Path | Description |
-|--------|------|-------------|
-| Dashboard | `/` | Progress stats, weak topics, recent sessions |
-| Themes | `/themes` | Browse learning themes |
-| Theme detail | `/themes/:id` | Chapters within a theme |
-| Chapter detail | `/themes/:themeId/chapters/:id` | Topics and study start |
-| Session player | `/study/:id` | Answer questions, see explanations |
-| Custom session | `/study/setup` | Build a filtered session |
-| History | `/history` | Past session list |
-| Session detail | `/history/:id` | Score breakdown per topic/chapter |
-| Import | `/import` | JSON import with preview |
-| Manage | `/manage` | Content CRUD |
+| Screen         | Path                            | Description                                  |
+| -------------- | ------------------------------- | -------------------------------------------- |
+| Dashboard      | `/`                             | Progress stats, weak topics, recent sessions |
+| Themes         | `/themes`                       | Browse learning themes                       |
+| Theme detail   | `/themes/:id`                   | Chapters within a theme                      |
+| Chapter detail | `/themes/:themeId/chapters/:id` | Topics and study start                       |
+| Session player | `/study/:id`                    | Answer questions, see explanations           |
+| Custom session | `/study/setup`                  | Build a filtered session                     |
+| History        | `/history`                      | Past session list                            |
+| Session detail | `/history/:id`                  | Score breakdown per topic/chapter            |
+| Import         | `/import`                       | JSON import with preview                     |
+| Manage         | `/manage`                       | Content CRUD                                 |
 
 ## Scripts
 
@@ -157,4 +157,4 @@ src/
 
 ## License
 
-Private project.
+[MIT](LICENSE)
