@@ -1,0 +1,15 @@
+node_modules
+.svelte-kit
+build
+.env
+.env.*
+*.log
+.git
+.gitignore
+.vscode
+.idea
+*.md
+e2e-test.mjs
+playwright.config.*
+test-results
+.sisyphus

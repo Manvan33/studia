@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Dockerfile: multi-stage Docker build (Node 22 + nginx alpine) for static deployment
+- nginx.conf: SPA-aware nginx config with gzip and asset caching
+- .dockerignore: excludes node_modules, build artifacts, dev files from Docker context
+- Switched from `adapter-auto` to `adapter-static` with SPA fallback (`200.html`)
+- Added `src/routes/+layout.ts` with `ssr = false` for fully client-side rendering
 - Manage Theme: drag-handle chapter reordering with persisted chapter `order`
 - Manage Theme: "Sort by name" action to alphabetize chapters and save new order
 - Manage Theme: theme-level JSON editor (`/manage/themes/:id/json`) with copy, validate, preview, and apply flow
