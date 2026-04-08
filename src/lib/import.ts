@@ -9,7 +9,8 @@ import type {
 	LearningTheme,
 	Chapter,
 	Topic,
-	Question
+	Question,
+	DatabaseBackup
 } from './types';
 import { db } from './db';
 
@@ -599,4 +600,128 @@ export function extractJson(input: string): string {
 	}
 
 	return input.trim();
+}
+
+export async function exportDatabase(includeSessions: boolean): Promise<DatabaseBackup> {
+	const [themes, chapters, topics, questions] = await Promise.all([
+		db.themes.toArray(),
+		db.chapters.toArray(),
+		db.topics.toArray(),
+		db.questions.toArray()
+	]);
+
+	const backup: DatabaseBackup = {
+		version: 1,
+		exportedAt: new Date().toISOString(),
+		includesSessions: includeSessions,
+		data: { themes, chapters, topics, questions }
+	};
+
+	if (includeSessions) {
+		const [sessions, sessionAnswers, questionProgress] = await Promise.all([
+			db.sessions.toArray(),
+			db.sessionAnswers.toArray(),
+			db.questionProgress.toArray()
+		]);
+		backup.data.sessions = sessions;
+		backup.data.sessionAnswers = sessionAnswers;
+		backup.data.questionProgress = questionProgress;
+	}
+
+	return backup;
+}
+
+export function validateDatabaseBackup(data: unknown): ValidationResult {
+	const errors: ValidationError[] = [];
+
+	if (!data || typeof data !== 'object') {
+		errors.push({ path: 'root', message: 'Backup must be a JSON object' });
+		return { valid: false, errors };
+	}
+
+	const d = data as Record<string, unknown>;
+
+	if (d.version !== 1) {
+		errors.push({ path: 'version', message: 'Unsupported backup version (expected 1)' });
+	}
+
+	if (typeof d.exportedAt !== 'string') {
+		errors.push({ path: 'exportedAt', message: 'Missing exportedAt timestamp' });
+	}
+
+	if (typeof d.includesSessions !== 'boolean') {
+		errors.push({ path: 'includesSessions', message: 'Missing includesSessions flag' });
+	}
+
+	if (!d.data || typeof d.data !== 'object') {
+		errors.push({ path: 'data', message: 'Missing data object' });
+		return { valid: false, errors };
+	}
+
+	const data_ = d.data as Record<string, unknown>;
+
+	for (const table of ['themes', 'chapters', 'topics', 'questions']) {
+		if (!Array.isArray(data_[table])) {
+			errors.push({ path: `data.${table}`, message: `${table} must be an array` });
+		}
+	}
+
+	if (d.includesSessions === true) {
+		for (const table of ['sessions', 'sessionAnswers', 'questionProgress']) {
+			if (!Array.isArray(data_[table])) {
+				errors.push({
+					path: `data.${table}`,
+					message: `${table} must be an array when sessions are included`
+				});
+			}
+		}
+	}
+
+	return { valid: errors.length === 0, errors };
+}
+
+export async function importDatabase(
+	backup: DatabaseBackup,
+	clearExisting: boolean
+): Promise<void> {
+	const tables = clearExisting
+		? [
+				db.themes,
+				db.chapters,
+				db.topics,
+				db.questions,
+				db.sessions,
+				db.sessionAnswers,
+				db.questionProgress
+			]
+		: [db.themes, db.chapters, db.topics, db.questions];
+
+	if (backup.includesSessions) {
+		tables.push(db.sessions, db.sessionAnswers, db.questionProgress);
+	}
+
+	const uniqueTables = [...new Set(tables)];
+
+	await db.transaction('rw', uniqueTables, async () => {
+		if (clearExisting) {
+			await db.questionProgress.clear();
+			await db.sessionAnswers.clear();
+			await db.sessions.clear();
+			await db.questions.clear();
+			await db.topics.clear();
+			await db.chapters.clear();
+			await db.themes.clear();
+		}
+
+		await db.themes.bulkPut(backup.data.themes);
+		await db.chapters.bulkPut(backup.data.chapters);
+		await db.topics.bulkPut(backup.data.topics);
+		await db.questions.bulkPut(backup.data.questions);
+
+		if (backup.includesSessions && backup.data.sessions) {
+			await db.sessions.bulkPut(backup.data.sessions);
+			await db.sessionAnswers.bulkPut(backup.data.sessionAnswers ?? []);
+			await db.questionProgress.bulkPut(backup.data.questionProgress ?? []);
+		}
+	});
 }

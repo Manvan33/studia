@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Full database export/import: backup and restore all data via Manage → Database Backup (`/manage/data`)
+- Export toggle to include or exclude study sessions (history, answers, per-question progress)
+- Import supports replace (clear existing) or merge mode
+- Backup file validation before import with error reporting
+- `DatabaseBackup` type, `exportDatabase()`, `validateDatabaseBackup()`, `importDatabase()` in `src/lib/import.ts`
 - Dockerfile: multi-stage Docker build (Node 22 + nginx alpine) for static deployment
 - nginx.conf: SPA-aware nginx config with gzip and asset caching
 - .dockerignore: excludes node_modules, build artifacts, dev files from Docker context

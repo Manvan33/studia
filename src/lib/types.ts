@@ -149,6 +149,21 @@ export interface ImportQuestion {
 	difficulty?: string;
 }
 
+export interface DatabaseBackup {
+	version: 1;
+	exportedAt: string;
+	includesSessions: boolean;
+	data: {
+		themes: LearningTheme[];
+		chapters: Chapter[];
+		topics: Topic[];
+		questions: Question[];
+		sessions?: StudySession[];
+		sessionAnswers?: SessionAnswer[];
+		questionProgress?: QuestionProgress[];
+	};
+}
+
 export interface ValidationResult {
 	valid: boolean;
 	errors: ValidationError[];
