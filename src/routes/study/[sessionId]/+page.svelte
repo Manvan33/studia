@@ -459,7 +459,7 @@
 							>
 							<p class="text-sm font-medium text-gray-600">Skipped</p>
 						</div>
-					{:else}
+					{:else if currentQuestion.type !== 'multiple_choice'}
 						<div
 							class="rounded-lg px-4 py-3 {currentAnswer.finalResult === 'correct'
 								? 'border border-green-200 bg-green-50'
@@ -517,7 +517,7 @@
 										Correct answers: {(currentQuestion.correctAnswers ?? []).join(', ')}
 									</p>
 								{/if}
-							{:else}
+							{:else if currentQuestion.type === 'free_text'}
 								<p class="mt-1 text-sm text-gray-600">Your answer: {currentAnswer.userAnswer}</p>
 								{#if currentAnswer.finalResult === 'incorrect'}
 									<p class="mt-1 text-sm text-gray-600">
@@ -579,7 +579,7 @@
 									>
 										{choice}
 									</span>
-									{#if isCorrectChoice && currentAnswer.finalResult !== 'correct'}
+									{#if isCorrectChoice}
 										<span class="ml-auto text-xs font-medium text-green-600">Correct answer</span>
 									{:else if isUserChoice && !isCorrectChoice}
 										<span class="ml-auto text-xs font-medium text-red-600">Your answer</span>

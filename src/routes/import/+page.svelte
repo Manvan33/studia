@@ -17,6 +17,7 @@
 	let importing = $state(false);
 	let parseError = $state('');
 	let promptCopied = $state(false);
+	let isDragOver = $state(false);
 
 	// Single-file paste preview (existing behavior)
 	let pastePreview = $state<ImportData | null>(null);
@@ -93,9 +94,7 @@
 		pastePreview = result.data;
 	}
 
-	async function handleFileUpload(event: Event) {
-		const input = event.target as HTMLInputElement;
-		const files = input.files;
+	async function processFiles(files: FileList | File[]) {
 		if (!files || files.length === 0) return;
 
 		parseError = '';
@@ -141,9 +140,42 @@
 			}
 			fileEntries = entries;
 		}
+	}
+
+	async function handleFileUpload(event: Event) {
+		const input = event.target as HTMLInputElement;
+		const files = input.files;
+		if (!files || files.length === 0) return;
+
+		await processFiles(files);
 
 		// Reset file input so the same files can be re-selected
 		input.value = '';
+	}
+
+	async function handleFileDrop(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+		isDragOver = false;
+
+		const files = event.dataTransfer?.files;
+		if (!files || files.length === 0) return;
+		await processFiles(files);
+	}
+
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+		if (event.dataTransfer) {
+			event.dataTransfer.dropEffect = 'copy';
+		}
+		isDragOver = true;
+	}
+
+	function handleDragLeave(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+		isDragOver = false;
 	}
 
 	function readFileAsText(file: File): Promise<string> {
@@ -216,6 +248,8 @@
 	}
 </script>
 
+<svelte:window on:dragover|preventDefault on:drop|preventDefault />
+
 <div class="mx-auto max-w-2xl space-y-6">
 	<div>
 		<h1 class="text-2xl font-bold text-gray-900">Import Content</h1>
@@ -271,7 +305,13 @@
 		<div class="space-y-4">
 			<div>
 				<label
-					class="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white p-8 transition-colors hover:border-primary-400 hover:bg-primary-50"
+					ondragenter={handleDragOver}
+					ondragover={handleDragOver}
+					ondragleave={handleDragLeave}
+					ondrop={handleFileDrop}
+					class="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors {isDragOver
+						? 'border-primary-500 bg-primary-50'
+						: 'border-gray-300 bg-white hover:border-primary-400 hover:bg-primary-50'}"
 				>
 					<div class="text-center">
 						<p class="text-sm font-medium text-gray-600">Drop JSON files here or click to upload</p>

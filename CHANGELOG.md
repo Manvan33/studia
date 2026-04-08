@@ -18,6 +18,9 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Study player MCQ review now relies on in-list answer highlighting/badges (removed redundant top result summary card for MCQ)
+- Import page drag-and-drop now captures dropped JSON files in-app instead of allowing browser navigation to the file
+
 - LLM prompt template updated with USER-SETTINGS block (student persona, difficulty level, question count) to match PROMPT.md
 
 ### Added
