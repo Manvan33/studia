@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
@@ -27,7 +28,7 @@
 		}
 
 		if (!s.completedAt) {
-			goto(`/study/${sessionId}`, { replaceState: true });
+			goto(`${base}/study/${sessionId}`, { replaceState: true });
 			return;
 		}
 
@@ -99,12 +100,12 @@
 {:else if !session}
 	<div class="py-10 text-center">
 		<p class="text-gray-500">Session not found</p>
-		<a href="/history" class="mt-2 text-primary-600 hover:text-primary-700">Back to History</a>
+		<a href="{base}/history" class="mt-2 text-primary-600 hover:text-primary-700">Back to History</a>
 	</div>
 {:else}
 	<div class="space-y-6">
 		<div>
-			<a href="/history" class="text-sm text-primary-600 hover:text-primary-700"
+			<a href="{base}/history" class="text-sm text-primary-600 hover:text-primary-700"
 				>&larr; All Sessions</a
 			>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">Session Summary</h1>

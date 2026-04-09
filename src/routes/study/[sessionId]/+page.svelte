@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
@@ -30,7 +31,7 @@
 		if (!s) return;
 
 		if (s.completedAt) {
-			goto(`/history/${sessionId}`, { replaceState: true });
+			goto(`${base}/history/${sessionId}`, { replaceState: true });
 			return;
 		}
 
@@ -163,7 +164,7 @@
 
 	async function finishSession() {
 		await completeSession(sessionId);
-		goto(`/history/${sessionId}`);
+		goto(`${base}/history/${sessionId}`);
 	}
 
 	function selectChoice(choice: string) {
@@ -186,7 +187,7 @@
 {:else if !session}
 	<div class="py-20 text-center">
 		<p class="text-gray-500">Session not found</p>
-		<a href="/" class="mt-2 text-primary-600 hover:text-primary-700">Back to Dashboard</a>
+		<a href="{base}/" class="mt-2 text-primary-600 hover:text-primary-700">Back to Dashboard</a>
 	</div>
 {:else if isComplete}
 	<div class="mx-auto max-w-lg space-y-6 py-10 text-center">

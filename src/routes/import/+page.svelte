@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { validateImportData, importData, extractJson, findExistingTheme } from '$lib/import';
 	import { LLM_PROMPT } from '$lib/prompt';
@@ -194,7 +195,7 @@
 		try {
 			const rawPreview = $state.snapshot(pastePreview);
 			const { themeId } = await importData(rawPreview);
-			goto(`/themes/${themeId}`);
+			goto(`${base}/themes/${themeId}`);
 		} catch (e: unknown) {
 			parseError = e instanceof Error ? e.message : 'Import failed';
 			importing = false;
@@ -217,9 +218,9 @@
 			}
 
 			if (importedThemeIds.size === 1) {
-				goto(`/themes/${lastThemeId}`);
+				goto(`${base}/themes/${lastThemeId}`);
 			} else {
-				goto('/themes');
+				goto(`${base}/themes`);
 			}
 		} catch (e: unknown) {
 			parseError = e instanceof Error ? e.message : 'Import failed';

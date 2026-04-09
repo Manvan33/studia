@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
@@ -157,14 +158,14 @@
 			await db.chapters.bulkDelete(chapterIds);
 			await db.themes.delete(themeId);
 		});
-		goto('/manage');
+		goto(`${base}/manage`);
 	}
 </script>
 
 {#if theme}
 	<div class="mx-auto max-w-2xl space-y-6">
 		<div>
-			<a href="/manage" class="text-sm text-primary-600 hover:text-primary-700">&larr; Back</a>
+			<a href="{base}/manage" class="text-sm text-primary-600 hover:text-primary-700">&larr; Back</a>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Theme</h1>
 		</div>
 
@@ -198,7 +199,7 @@
 						Save Changes
 					</button>
 					<a
-						href="/manage/themes/{themeId}/json"
+						href="{base}/manage/themes/{themeId}/json"
 						class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
 					>
 						Edit as JSON
@@ -285,7 +286,7 @@
 							</button>
 							<span class="text-sm font-medium text-gray-400">{i + 1}</span>
 							<a
-								href="/manage/chapters/{chapter.id}"
+								href="{base}/manage/chapters/{chapter.id}"
 								class="truncate font-medium text-gray-900 hover:text-primary-700 hover:underline"
 							>
 								{chapter.title}

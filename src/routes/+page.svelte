@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { db } from '$lib/db';
 	import { getProgressStats, type ProgressStats, type ChapterStatus } from '$lib/progress';
 	import type { LearningTheme, StudySession, Chapter, Question } from '$lib/types';
@@ -176,7 +177,7 @@
 			<p class="text-lg font-medium text-gray-600">No study content yet</p>
 			<p class="mt-1 text-sm text-gray-400">Import a JSON study guide to get started</p>
 			<a
-				href="/import"
+				href="{base}/import"
 				class="mt-4 inline-block rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
 			>
 				Import Content
@@ -211,13 +212,13 @@
 
 				<div class="flex flex-wrap gap-2">
 					<a
-						href="/study/setup"
+						href="{base}/study/setup"
 						class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
 					>
 						Custom Session
 					</a>
 					<a
-						href="/import"
+						href="{base}/import"
 						class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
 					>
 						Import Content
@@ -235,7 +236,7 @@
 							{/if}
 						</div>
 						<a
-							href="/themes/{selectedTheme.id}"
+							href="{base}/themes/{selectedTheme.id}"
 							class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
 						>
 							Open Theme
@@ -282,7 +283,7 @@
 							<div class="space-y-2">
 								{#each selectedThemeIncompleteSessions.slice(0, 3) as session}
 									<a
-										href="/study/{session.id}"
+										href="{base}/study/{session.id}"
 										class="block rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-sm text-primary-800 hover:bg-primary-100"
 									>
 										<p class="font-medium">Resume session</p>
@@ -303,7 +304,7 @@
 					<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 						<div class="mb-3 flex items-center justify-between">
 							<h3 class="text-sm font-semibold text-gray-800">Recent Results</h3>
-							<a href="/history" class="text-xs text-primary-600 hover:text-primary-700">View all</a
+							<a href="{base}/history" class="text-xs text-primary-600 hover:text-primary-700">View all</a
 							>
 						</div>
 						{#if selectedThemeRecentCompletedSessions.length === 0}
@@ -312,7 +313,7 @@
 							<div class="space-y-2">
 								{#each selectedThemeRecentCompletedSessions as session}
 									<a
-										href="/history/{session.id}"
+										href="{base}/history/{session.id}"
 										class="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-50"
 									>
 										<div>

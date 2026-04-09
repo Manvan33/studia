@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import './layout.css';
 	import favicon from '$lib/assets/studia-icon.png';
 	import { page } from '$app/state';
@@ -16,8 +17,15 @@
 	];
 
 	function isActive(href: string): boolean {
-		if (href === '/') return page.url.pathname === '/';
-		return page.url.pathname.startsWith(href);
+		const currentPath = page.url.pathname.startsWith(base)
+			? page.url.pathname.slice(base.length) || '/'
+			: page.url.pathname;
+		if (href === '/') return currentPath === '/';
+		return currentPath.startsWith(href);
+	}
+
+	function withBase(path: string): string {
+		return `${base}${path}`;
 	}
 </script>
 
@@ -26,12 +34,12 @@
 <div class="flex min-h-screen flex-col bg-gray-50">
 	<header class="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm">
 		<div class="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-			<a href="/" class="text-xl font-bold text-primary-700">Studia</a>
+			<a href={withBase('/')} class="text-xl font-bold text-primary-700">Studia</a>
 
 			<nav class="hidden gap-1 md:flex">
 				{#each navItems as item}
 					<a
-						href={item.href}
+						href={withBase(item.href)}
 						class="rounded-lg px-3 py-2 text-sm font-medium transition-colors {isActive(item.href)
 							? 'bg-primary-50 text-primary-700'
 							: 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}"
@@ -60,7 +68,7 @@
 			<nav class="border-t border-gray-200 bg-white px-4 pb-3 md:hidden">
 				{#each navItems as item}
 					<a
-						href={item.href}
+						href={withBase(item.href)}
 						class="block rounded-lg px-3 py-2 text-sm font-medium transition-colors {isActive(item.href)
 							? 'bg-primary-50 text-primary-700'
 							: 'text-gray-600 hover:bg-gray-100'}"

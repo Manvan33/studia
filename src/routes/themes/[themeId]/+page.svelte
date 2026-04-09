@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { db } from '$lib/db';
 	import type { LearningTheme, Chapter } from '$lib/types';
@@ -29,7 +30,7 @@
 {#if theme}
 	<div class="space-y-6">
 		<div>
-			<a href="/themes" class="text-sm text-primary-600 hover:text-primary-700">&larr; All Themes</a>
+			<a href="{base}/themes" class="text-sm text-primary-600 hover:text-primary-700">&larr; All Themes</a>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">{theme.title}</h1>
 			{#if theme.description}
 				<p class="mt-1 text-gray-500">{theme.description}</p>
@@ -42,7 +43,7 @@
 			<div class="space-y-3">
 				{#each chapters as chapter, i}
 					<a
-						href="/themes/{theme.id}/chapters/{chapter.id}"
+						href="{base}/themes/{theme.id}/chapters/{chapter.id}"
 						class="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
 					>
 						<div

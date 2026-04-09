@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { db } from '$lib/db';
 	import { exportDatabase, validateDatabaseBackup, importDatabase } from '$lib/import';
 	import type { DatabaseBackup, ValidationError } from '$lib/types';
@@ -145,7 +146,7 @@
 <div class="mx-auto max-w-2xl space-y-8">
 	<div>
 		<div class="flex items-center gap-2">
-			<a href="/manage" class="text-sm text-gray-500 hover:text-gray-700">&larr; Manage</a>
+			<a href="{base}/manage" class="text-sm text-gray-500 hover:text-gray-700">&larr; Manage</a>
 		</div>
 		<h1 class="mt-2 text-2xl font-bold text-gray-900">Database Backup</h1>
 		<p class="mt-1 text-sm text-gray-500">Export or restore your entire Studia database</p>
@@ -349,7 +350,7 @@
 				</div>
 				<div class="flex gap-3">
 					<a
-						href="/"
+						href="{base}/"
 						class="flex-1 rounded-lg bg-primary-600 py-2.5 text-center font-medium text-white hover:bg-primary-700"
 					>
 						Go to Dashboard

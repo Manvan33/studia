@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { db } from '$lib/db';
 	import type { LearningTheme } from '$lib/types';
 	import { liveQuery } from 'dexie';
@@ -20,21 +21,21 @@
 
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 		<a
-			href="/import"
+			href="{base}/import"
 			class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
 		>
 			<h2 class="text-lg font-semibold text-gray-900">Import JSON</h2>
 			<p class="mt-1 text-sm text-gray-500">Import a new study guide from JSON</p>
 		</a>
 		<a
-			href="/study/setup"
+			href="{base}/study/setup"
 			class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
 		>
 			<h2 class="text-lg font-semibold text-gray-900">Custom Session</h2>
 			<p class="mt-1 text-sm text-gray-500">Create a custom study session</p>
 		</a>
 		<a
-			href="/manage/data"
+			href="{base}/manage/data"
 			class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
 		>
 			<h2 class="text-lg font-semibold text-gray-900">Database Backup</h2>
@@ -48,7 +49,7 @@
 			<div class="space-y-2">
 				{#each themes as theme}
 					<a
-						href="/manage/themes/{theme.id}"
+						href="{base}/manage/themes/{theme.id}"
 						class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 transition-shadow hover:shadow-sm"
 					>
 						<span class="font-medium text-gray-900">{theme.title}</span>
@@ -62,7 +63,7 @@
 			<p class="text-lg font-medium text-gray-600">No content yet</p>
 			<p class="mt-1 text-sm text-gray-400">Import a study guide to get started</p>
 			<a
-				href="/import"
+				href="{base}/import"
 				class="mt-3 inline-block rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
 			>
 				Import JSON

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
@@ -40,14 +41,14 @@
 
 	async function startStudy() {
 		const session = await createChapterSession(chapterId);
-		goto(`/study/${session.id}`);
+		goto(`${base}/study/${session.id}`);
 	}
 </script>
 
 {#if chapter}
 	<div class="space-y-6">
 		<div>
-			<a href="/themes/{themeId}" class="text-sm text-primary-600 hover:text-primary-700"
+			<a href="{base}/themes/{themeId}" class="text-sm text-primary-600 hover:text-primary-700"
 				>&larr; Back to Theme</a
 			>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">{chapter.title}</h1>

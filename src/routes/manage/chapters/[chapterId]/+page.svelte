@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
@@ -97,7 +98,7 @@
 			await db.topics.where('chapterId').equals(chapterId).delete();
 			await db.chapters.delete(chapterId);
 		});
-		goto(`/manage/themes/${chapter.themeId}`);
+		goto(`${base}/manage/themes/${chapter.themeId}`);
 	}
 
 	function questionsForTopic(topicId: string): number {
@@ -111,7 +112,7 @@
 	<div class="mx-auto max-w-2xl space-y-6">
 		<div>
 			<a
-				href="/manage/themes/{chapter.themeId}"
+				href="{base}/manage/themes/{chapter.themeId}"
 				class="text-sm text-primary-600 hover:text-primary-700">&larr; Back to Theme</a
 			>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Chapter</h1>
@@ -161,7 +162,7 @@
 					{savingChapter ? 'Saving...' : 'Save Changes'}
 				</button>
 				<a
-					href="/manage/chapters/{chapterId}/json"
+					href="{base}/manage/chapters/{chapterId}/json"
 					class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
 				>
 					Edit as JSON
@@ -201,7 +202,7 @@
 			<div class="space-y-2">
 				{#each topics as topic, i}
 					<a
-						href="/manage/topics/{topic.id}"
+						href="{base}/manage/topics/{topic.id}"
 						class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:shadow-sm"
 					>
 						<div class="flex items-center gap-3">

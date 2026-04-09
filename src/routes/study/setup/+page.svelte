@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
 	import { createCustomSession } from '$lib/sessions';
@@ -96,7 +97,7 @@
 				unansweredOnly,
 				finalAssessmentOnly
 			});
-			goto(`/study/${session.id}`);
+			goto(`${base}/study/${session.id}`);
 		} catch {
 			creating = false;
 		}

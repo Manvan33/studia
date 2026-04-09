@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
@@ -118,7 +119,7 @@
 			await db.questions.where('topicId').equals(topicId).delete();
 			await db.topics.delete(topicId);
 		});
-		goto(`/manage/chapters/${topic.chapterId}`);
+		goto(`${base}/manage/chapters/${topic.chapterId}`);
 	}
 </script>
 
@@ -126,7 +127,7 @@
 	<div class="mx-auto max-w-2xl space-y-6">
 		<div>
 			<a
-				href="/manage/chapters/{topic.chapterId}"
+				href="{base}/manage/chapters/{topic.chapterId}"
 				class="text-sm text-primary-600 hover:text-primary-700">&larr; Back to Chapter</a
 			>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Topic</h1>

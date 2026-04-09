@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
@@ -85,7 +86,7 @@
 		try {
 			const rawPreview = $state.snapshot(preview);
 			await updateThemeFromJson(themeId, rawPreview);
-			goto(`/manage/themes/${themeId}`);
+			goto(`${base}/manage/themes/${themeId}`);
 		} catch (e: unknown) {
 			parseError = e instanceof Error ? e.message : 'Update failed';
 			saving = false;
@@ -123,7 +124,7 @@
 
 <div class="mx-auto max-w-4xl space-y-6">
 	<div>
-		<a href="/manage/themes/{themeId}" class="text-sm text-primary-600 hover:text-primary-700"
+		<a href="{base}/manage/themes/{themeId}" class="text-sm text-primary-600 hover:text-primary-700"
 			>&larr; Back to Theme</a
 		>
 		<h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Theme JSON</h1>
