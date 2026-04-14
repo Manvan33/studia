@@ -49,12 +49,10 @@
 			return;
 		}
 		const load = async () => {
-			const allTopics: Topic[] = [];
-			for (const cid of selectedChapterIds) {
-				const ts = await db.topics.where('chapterId').equals(cid).sortBy('order');
-				allTopics.push(...ts);
-			}
-			topics = allTopics;
+			const topicArrays = await Promise.all(
+				selectedChapterIds.map((cid) => db.topics.where('chapterId').equals(cid).sortBy('order'))
+			);
+			topics = topicArrays.flat();
 		};
 		load();
 	});
