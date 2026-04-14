@@ -24,14 +24,7 @@ export function validateImportData(data: unknown): ValidationResult {
 
 	const d = data as Record<string, unknown>;
 
-	if (!d.theme || typeof d.theme !== 'object') {
-		errors.push({ path: 'theme', message: 'Missing or invalid theme object' });
-	} else {
-		const theme = d.theme as Record<string, unknown>;
-		if (!theme.title || typeof theme.title !== 'string' || theme.title.trim() === '') {
-			errors.push({ path: 'theme.title', message: 'Theme title is required' });
-		}
-	}
+	validateTheme(d.theme, errors);
 
 	if (!Array.isArray(d.chapters)) {
 		errors.push({ path: 'chapters', message: 'Chapters must be an array' });
@@ -47,6 +40,18 @@ export function validateImportData(data: unknown): ValidationResult {
 	});
 
 	return { valid: errors.length === 0, errors };
+}
+
+function validateTheme(themeData: unknown, errors: ValidationError[]): void {
+	if (!themeData || typeof themeData !== 'object') {
+		errors.push({ path: 'theme', message: 'Missing or invalid theme object' });
+		return;
+	}
+
+	const theme = themeData as Record<string, unknown>;
+	if (!theme.title || typeof theme.title !== 'string' || theme.title.trim() === '') {
+		errors.push({ path: 'theme.title', message: 'Theme title is required' });
+	}
 }
 
 function validateChapter(chapter: unknown, path: string, errors: ValidationError[]): void {

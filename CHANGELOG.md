@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - GitHub Pages deployment workflow via GitHub Actions (`.github/workflows/deploy-pages.yml`) that builds and deploys static output from `build/`
 - Full database export/import: backup and restore all data via Manage → Database Backup (`/manage/data`)
+- Refactor `validateImportData` to use early returns by extracting a `validateTheme` helper, reducing nesting and simplifying control flow.
 - Export toggle to include or exclude study sessions (history, answers, per-question progress)
 - Import supports replace (clear existing) or merge mode
 - Backup file validation before import with error reporting
