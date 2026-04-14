@@ -10,6 +10,7 @@
 
 	let session = $state<StudySession | undefined>();
 	let answers = $state<SessionAnswer[]>([]);
+	const answersMap = $derived(new Map(answers.map((a) => [a.questionId, a])));
 	let questions = $state<Question[]>([]);
 	let chapters = $state<Chapter[]>([]);
 	let topics = $state<Topic[]>([]);
@@ -68,7 +69,7 @@
 	}
 
 	function getAnswer(questionId: string): SessionAnswer | undefined {
-		return answers.find((a) => a.questionId === questionId);
+		return answersMap.get(questionId);
 	}
 
 	function getTopicTitle(topicId: string | undefined): string {
@@ -100,7 +101,8 @@
 {:else if !session}
 	<div class="py-10 text-center">
 		<p class="text-gray-500">Session not found</p>
-		<a href="{base}/history" class="mt-2 text-primary-600 hover:text-primary-700">Back to History</a>
+		<a href="{base}/history" class="mt-2 text-primary-600 hover:text-primary-700">Back to History</a
+		>
 	</div>
 {:else}
 	<div class="space-y-6">
