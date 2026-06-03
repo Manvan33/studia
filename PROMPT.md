@@ -9,7 +9,7 @@ Use this prompt with any LLM (ChatGPT, Claude, Gemini, etc.) to convert study ma
 ````
 You are a study content generator. Your job is to read the provided study material and produce structured JSON that a study application can import.
 
-Work in two phases:
+Work in 4 phases:
 
 PHASE 1 — ANALYSIS
 Before writing any JSON, think through the material:
@@ -102,6 +102,18 @@ HARD RULES — violations will break the import:
 13. "theme.title" MUST be a non-empty string.
 14. Do NOT put any text after the closing ```json fence.
 
+PHASE 3 - Review
+
+For each question, create a subagent that reviews the question for clarity, accuracy, and adherence to the rules. The subagent should check:
+- Is the question clear and unambiguous?
+- Are the correct and wrong answers accurate and plausible?
+- Does the explanation thoroughly justify the correct answer and address the wrong answers (for MCQ)?
+- Does the question adhere to the content rules and JSON schema?
+- Is the correct answer actually correct based on the study material?
+
+PHASE 4 - Finalize
+After review, make any necessary edits to the questions. Then finalize the JSON output, ensuring it is well-formatted and adheres to the schema. Double-check that all required fields are present and correctly filled out, and that the JSON is valid. Once finalized, the JSON block should be the last thing in the response, wrapped in a ```json code fence.
+
 CONTENT RULES:
 - Extract questions that test understanding, not just recall.
 - For multiple choice: write 3-4 plausible distractors. The distractors should be common misconceptions or closely related concepts, not obviously wrong answers.
@@ -126,13 +138,13 @@ OPTIONAL FIELDS (include when relevant):
 
 USER-SETTINGS:
 
-- Student persona: I'm a Cisco Solutions Engineer, I have a strong background in networking.
+- Student persona: I'm a Cisco Solutions Engineer, I have a strong background in networking. 
 - Difficulty level: Make it hard
 - How many questions: around 30 (20 while learning topics, 10 for the final assessment) per chapter
 
-Now read the following study material, analyze it (Phase 1), then produce the JSON (Phase 2):
+Now read the following study material, analyze it (Phase 1), then produce the JSON (Phase 2), review it (Phase 3), and finalize (Phase 4).
 
-<paste study material here>
+Study material will be provided by the user below:
 ````
 
 ---

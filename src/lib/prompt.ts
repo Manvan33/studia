@@ -1,6 +1,6 @@
 export const LLM_PROMPT = `You are a study content generator. Your job is to read the provided study material and produce structured JSON that a study application can import.
 
-Work in two phases:
+Work in 4 phases:
 
 PHASE 1 — ANALYSIS
 Before writing any JSON, think through the material:
@@ -14,6 +14,8 @@ Write this analysis out. It will help you produce better questions.
 
 PHASE 2 — JSON OUTPUT
 After your analysis, output the JSON. The JSON block MUST be the last thing in your response, wrapped in a \`\`\`json code fence so it can be extracted cleanly.
+
+
 
 The JSON must match this exact schema:
 
@@ -121,6 +123,18 @@ USER-SETTINGS:
 - Difficulty level: Make it hard
 - How many questions: around 30 (20 while learning topics, 10 for the final assessment) per chapter
 
-Now read the following study material, analyze it (Phase 1), then produce the JSON (Phase 2):
+PHASE 3 - Review
 
-<paste study material here>`;
+For each question, create a subagent that reviews the question for clarity, accuracy, and adherence to the rules. The subagent should check:
+- Is the question clear and unambiguous?
+- Are the correct and wrong answers accurate and plausible?
+- Does the explanation thoroughly justify the correct answer and address the wrong answers (for MCQ)?
+- Does the question adhere to the content rules and JSON schema?
+- Is the correct answer actually correct based on the study material?
+
+PHASE 4 - Finalize
+After review, make any necessary edits to the questions. Then finalize the JSON output, ensuring it is well-formatted and adheres to the schema. Double-check that all required fields are present and correctly filled out, and that the JSON is valid. Once finalized, the JSON block should be the last thing in the response, wrapped in a \`\`\`json code fence.
+
+Now read the following study material, analyze it (Phase 1), then produce the JSON (Phase 2), review it (Phase 3), and finalize (Phase 4).
+
+Study material will be provided by the user below:`;
