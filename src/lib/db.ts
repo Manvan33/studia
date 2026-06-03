@@ -6,7 +6,8 @@ import type {
 	Question,
 	StudySession,
 	SessionAnswer,
-	QuestionProgress
+	QuestionProgress,
+	SourceDocument
 } from './types';
 
 const db = new Dexie('StudiaDB') as Dexie & {
@@ -17,6 +18,7 @@ const db = new Dexie('StudiaDB') as Dexie & {
 	sessions: EntityTable<StudySession, 'id'>;
 	sessionAnswers: EntityTable<SessionAnswer, 'id'>;
 	questionProgress: EntityTable<QuestionProgress, 'questionId'>;
+	sourceDocuments: EntityTable<SourceDocument, 'id'>;
 };
 
 db.version(1).stores({
@@ -27,6 +29,11 @@ db.version(1).stores({
 	sessions: 'id, type, createdAt, completedAt',
 	sessionAnswers: 'id, sessionId, questionId, answeredAt',
 	questionProgress: 'questionId, lastAnsweredAt'
+});
+
+// v2: source documents (study guide PDFs/HTML attached per chapter)
+db.version(2).stores({
+	sourceDocuments: 'id, chapterId, createdAt'
 });
 
 export { db };

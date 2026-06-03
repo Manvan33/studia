@@ -6,6 +6,7 @@
 	import { nanoid } from 'nanoid';
 	import type { Chapter, Topic, Question } from '$lib/types';
 	import { liveQuery } from 'dexie';
+	import ChapterSourceDocuments from '$lib/components/ChapterSourceDocuments.svelte';
 
 	const chapterId = $derived(page.params.chapterId ?? '');
 
@@ -220,6 +221,8 @@
 				<p class="text-sm text-amber-700">{finalAssessmentCount} final assessment questions</p>
 			</div>
 		{/if}
+
+		<ChapterSourceDocuments {chapterId} />
 
 		<div class="border-t border-gray-200 pt-6">
 			{#if confirmDelete}

@@ -3,6 +3,7 @@
 	import './layout.css';
 	import favicon from '$lib/assets/studia-icon.png';
 	import { page } from '$app/state';
+	import SourcePanel from '$lib/components/SourcePanel.svelte';
 
 	let { children } = $props();
 
@@ -89,3 +90,5 @@
 		Studia &mdash; Reverse Learning App
 	</footer>
 </div>
+
+<SourcePanel />

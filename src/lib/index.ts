@@ -9,4 +9,14 @@ export {
 	completeSession
 } from './sessions';
 export { getProgressStats } from './progress';
+export {
+	addSourceDocument,
+	listSourceDocuments,
+	getSourceDocument,
+	deleteSourceDocument,
+	renameSourceDocument,
+	detectKind,
+	readSourceText,
+	normaliseForQuoteMatch
+} from './sources';
 export type * from './types';

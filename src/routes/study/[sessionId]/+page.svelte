@@ -5,6 +5,7 @@
 	import { db } from '$lib/db';
 	import { submitAnswer, overrideAnswer, completeSession } from '$lib/sessions';
 	import { renderMarkdown } from '$lib/markdown';
+	import SourceQuote from '$lib/components/SourceQuote.svelte';
 	import type { StudySession, Question, SessionAnswer } from '$lib/types';
 
 	const sessionId = $derived(page.params.sessionId ?? '');
@@ -665,6 +666,13 @@
 							{@html renderMarkdown(currentQuestion.explanation)}
 						</div>
 					</div>
+
+					{#if currentQuestion.sourceRef}
+						<SourceQuote
+							chapterId={currentQuestion.chapterId}
+							sourceRef={currentQuestion.sourceRef}
+						/>
+					{/if}
 
 					{#if currentQuestion.type === 'free_text' && !currentAnswer.skipped}
 						<div class="flex items-center gap-2">

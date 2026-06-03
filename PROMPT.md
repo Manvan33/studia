@@ -49,6 +49,10 @@ The JSON must match this exact schema:
               "choices": ["<correct answer>", "<wrong 1>", "<wrong 2>", "<wrong 3>"],
               "correctAnswer": "<must exactly match one of the choices>",
               "explanation": "<detailed markdown-formatted explanation of why this is correct>",
+              "sourceRef": {
+                "quote": "<verbatim 1-3 sentence excerpt from the source that justifies the correct answer>",
+                "locator": { "page": 42, "section": "3.2.1 RF Fundamentals", "anchor": "rf-basics" }
+              },
               "order": 1
             },
             {
@@ -57,6 +61,10 @@ The JSON must match this exact schema:
               "context": "<optional markdown-formatted background information>",
               "correctAnswer": "<expected short answer>",
               "explanation": "<detailed markdown-formatted explanation>",
+              "sourceRef": {
+                "quote": "<verbatim excerpt that justifies the correct answer>",
+                "locator": { "page": 42 }
+              },
               "order": 2
             },
             {
@@ -66,6 +74,10 @@ The JSON must match this exact schema:
               "choices": ["<correct 1>", "<correct 2>", "<wrong 1>", "<wrong 2>"],
               "correctAnswers": ["<correct 1>", "<correct 2>"],
               "explanation": "<detailed markdown-formatted explanation>",
+              "sourceRef": {
+                "quote": "<verbatim excerpt that justifies the correct answers>",
+                "locator": { "section": "3.2.1 RF Fundamentals" }
+              },
               "order": 3
             }
           ]
@@ -88,7 +100,7 @@ The JSON must match this exact schema:
 
 HARD RULES — violations will break the import:
 1. The JSON block MUST be the last thing in your response, inside a ```json fence.
-2. Every question MUST have: type, prompt, explanation, order.
+2. Every question MUST have: type, prompt, explanation, order, sourceRef.
 3. Multiple choice questions MUST have a "choices" array with at least 2 items and a "correctAnswer" string.
 4. For multiple choice, "correctAnswer" MUST be an exact string match to one of the "choices".
 5. Free text questions MUST NOT have a "choices" field. They MUST have a "correctAnswer" string.
@@ -101,6 +113,8 @@ HARD RULES — violations will break the import:
 12. There MUST be at least 1 chapter.
 13. "theme.title" MUST be a non-empty string.
 14. Do NOT put any text after the closing ```json fence.
+15. "sourceRef.quote" MUST be a verbatim excerpt (1–3 sentences) copied from the supplied study material that directly justifies the correct answer. Do not paraphrase. Preserve original wording, punctuation and capitalization.
+16. "sourceRef.locator" SHOULD include "page" for PDF sources, "anchor" or "section" for HTML sources, when known.
 
 PHASE 3 - Review
 
@@ -135,6 +149,13 @@ OPTIONAL FIELDS (include when relevant):
 - "tags": ["tag1", "tag2"] — categorization tags on questions
 - "difficulty": "easy" | "medium" | "hard" — difficulty level on questions
 - "description": string — on theme, chapters, or topics
+
+SOURCE REFERENCES:
+- Every question MUST include a "sourceRef" pointing back to the original study material.
+- The "quote" must be VERBATIM — do not paraphrase, summarise or rewrite.
+- Keep the quote short but self-contained (1–3 sentences).
+- Include "page" when the source is a PDF and you can identify the page; otherwise omit.
+- For HTML sources, include "anchor" (the id of the nearest heading) or "section" (heading text).
 
 USER-SETTINGS:
 

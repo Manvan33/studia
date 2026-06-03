@@ -182,6 +182,10 @@ function validateQuestion(question: unknown, path: string, errors: ValidationErr
 		errors.push({ path: `${path}.context`, message: 'Context must be a string if provided' });
 	}
 
+	if (q.sourceRef !== undefined) {
+		validateSourceRef(q.sourceRef, `${path}.sourceRef`, errors);
+	}
+
 	if (
 		q.type === 'multiple_choice' &&
 		Array.isArray(q.choices) &&
@@ -204,6 +208,33 @@ function validateQuestion(question: unknown, path: string, errors: ValidationErr
 				});
 				break;
 			}
+		}
+	}
+}
+
+function validateSourceRef(value: unknown, path: string, errors: ValidationError[]): void {
+	if (!value || typeof value !== 'object') {
+		errors.push({ path, message: 'sourceRef must be an object' });
+		return;
+	}
+	const ref = value as Record<string, unknown>;
+	if (typeof ref.quote !== 'string' || ref.quote.trim() === '') {
+		errors.push({ path: `${path}.quote`, message: 'sourceRef.quote must be a non-empty string' });
+	}
+	if (ref.locator !== undefined) {
+		if (!ref.locator || typeof ref.locator !== 'object') {
+			errors.push({ path: `${path}.locator`, message: 'locator must be an object if provided' });
+			return;
+		}
+		const loc = ref.locator as Record<string, unknown>;
+		if (loc.page !== undefined && (typeof loc.page !== 'number' || loc.page < 1)) {
+			errors.push({ path: `${path}.locator.page`, message: 'page must be a positive number' });
+		}
+		if (loc.section !== undefined && typeof loc.section !== 'string') {
+			errors.push({ path: `${path}.locator.section`, message: 'section must be a string' });
+		}
+		if (loc.anchor !== undefined && typeof loc.anchor !== 'string') {
+			errors.push({ path: `${path}.locator.anchor`, message: 'anchor must be a string' });
 		}
 	}
 }
@@ -323,6 +354,7 @@ function buildQuestion(
 		tags: iq.tags,
 		difficulty: iq.difficulty,
 		isFinalAssessment,
+		sourceRef: iq.sourceRef,
 		createdAt: now,
 		updatedAt: now
 	};
@@ -602,7 +634,10 @@ export function extractJson(input: string): string {
 	return input.trim();
 }
 
-export async function exportDatabase(includeSessions: boolean): Promise<DatabaseBackup> {
+export async function exportDatabase(
+	includeSessions: boolean,
+	includeSourceDocuments = false
+): Promise<DatabaseBackup> {
 	const [themes, chapters, topics, questions] = await Promise.all([
 		db.themes.toArray(),
 		db.chapters.toArray(),
@@ -611,9 +646,10 @@ export async function exportDatabase(includeSessions: boolean): Promise<Database
 	]);
 
 	const backup: DatabaseBackup = {
-		version: 1,
+		version: includeSourceDocuments ? 2 : 1,
 		exportedAt: new Date().toISOString(),
 		includesSessions: includeSessions,
+		includesSourceDocuments: includeSourceDocuments || undefined,
 		data: { themes, chapters, topics, questions }
 	};
 
@@ -628,7 +664,46 @@ export async function exportDatabase(includeSessions: boolean): Promise<Database
 		backup.data.questionProgress = questionProgress;
 	}
 
+	if (includeSourceDocuments) {
+		const docs = await db.sourceDocuments.toArray();
+		backup.data.sourceDocuments = await Promise.all(docs.map(serializeSourceDocument));
+	}
+
 	return backup;
+}
+
+async function serializeSourceDocument(
+	doc: import('./types').SourceDocument
+): Promise<import('./types').SerializedSourceDocument> {
+	const buf = await doc.blob.arrayBuffer();
+	return {
+		id: doc.id,
+		chapterId: doc.chapterId,
+		title: doc.title,
+		kind: doc.kind,
+		mime: doc.mime,
+		size: doc.size,
+		dataBase64: arrayBufferToBase64(buf),
+		createdAt: doc.createdAt,
+		updatedAt: doc.updatedAt
+	};
+}
+
+function arrayBufferToBase64(buf: ArrayBuffer): string {
+	const bytes = new Uint8Array(buf);
+	let binary = '';
+	const chunk = 0x8000;
+	for (let i = 0; i < bytes.length; i += chunk) {
+		binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+	}
+	return btoa(binary);
+}
+
+function base64ToArrayBuffer(b64: string): ArrayBuffer {
+	const binary = atob(b64);
+	const bytes = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+	return bytes.buffer;
 }
 
 export function validateDatabaseBackup(data: unknown): ValidationResult {
@@ -641,8 +716,8 @@ export function validateDatabaseBackup(data: unknown): ValidationResult {
 
 	const d = data as Record<string, unknown>;
 
-	if (d.version !== 1) {
-		errors.push({ path: 'version', message: 'Unsupported backup version (expected 1)' });
+	if (d.version !== 1 && d.version !== 2) {
+		errors.push({ path: 'version', message: 'Unsupported backup version (expected 1 or 2)' });
 	}
 
 	if (typeof d.exportedAt !== 'string') {
@@ -677,6 +752,13 @@ export function validateDatabaseBackup(data: unknown): ValidationResult {
 		}
 	}
 
+	if (d.includesSourceDocuments === true && !Array.isArray(data_.sourceDocuments)) {
+		errors.push({
+			path: 'data.sourceDocuments',
+			message: 'sourceDocuments must be an array when source documents are included'
+		});
+	}
+
 	return { valid: errors.length === 0, errors };
 }
 
@@ -684,7 +766,7 @@ export async function importDatabase(
 	backup: DatabaseBackup,
 	clearExisting: boolean
 ): Promise<void> {
-	const tables = clearExisting
+	const tables: import('dexie').Table<unknown>[] = clearExisting
 		? [
 				db.themes,
 				db.chapters,
@@ -692,12 +774,16 @@ export async function importDatabase(
 				db.questions,
 				db.sessions,
 				db.sessionAnswers,
-				db.questionProgress
+				db.questionProgress,
+				db.sourceDocuments
 			]
 		: [db.themes, db.chapters, db.topics, db.questions];
 
 	if (backup.includesSessions) {
 		tables.push(db.sessions, db.sessionAnswers, db.questionProgress);
+	}
+	if (backup.includesSourceDocuments) {
+		tables.push(db.sourceDocuments);
 	}
 
 	const uniqueTables = [...new Set(tables)];
@@ -711,6 +797,7 @@ export async function importDatabase(
 			await db.topics.clear();
 			await db.chapters.clear();
 			await db.themes.clear();
+			await db.sourceDocuments.clear();
 		}
 
 		await db.themes.bulkPut(backup.data.themes);
@@ -722,6 +809,21 @@ export async function importDatabase(
 			await db.sessions.bulkPut(backup.data.sessions);
 			await db.sessionAnswers.bulkPut(backup.data.sessionAnswers ?? []);
 			await db.questionProgress.bulkPut(backup.data.questionProgress ?? []);
+		}
+
+		if (backup.includesSourceDocuments && backup.data.sourceDocuments) {
+			const docs = backup.data.sourceDocuments.map((s) => ({
+				id: s.id,
+				chapterId: s.chapterId,
+				title: s.title,
+				kind: s.kind,
+				mime: s.mime,
+				size: s.size,
+				blob: new Blob([base64ToArrayBuffer(s.dataBase64)], { type: s.mime }),
+				createdAt: s.createdAt,
+				updatedAt: s.updatedAt
+			}));
+			await db.sourceDocuments.bulkPut(docs);
 		}
 	});
 }

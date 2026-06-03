@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
 	import { renderMarkdown } from '$lib/markdown';
+	import SourceQuote from '$lib/components/SourceQuote.svelte';
 	import type { StudySession, SessionAnswer, Question, Chapter, Topic } from '$lib/types';
 
 	const sessionId = $derived(page.params.sessionId ?? '');
@@ -331,6 +332,14 @@
 										<p class="text-xs font-medium text-blue-600 uppercase">Explanation</p>
 										{@html renderMarkdown(question.explanation)}
 									</div>
+									{#if question.sourceRef}
+										<div class="mt-2">
+											<SourceQuote
+												chapterId={question.chapterId}
+												sourceRef={question.sourceRef}
+											/>
+										</div>
+									{/if}
 								{/if}
 							</div>
 						</div>

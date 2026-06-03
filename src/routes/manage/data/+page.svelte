@@ -5,6 +5,7 @@
 	import type { DatabaseBackup, ValidationError } from '$lib/types';
 
 	let includeSessions = $state(true);
+	let includeSourceDocuments = $state(false);
 	let exporting = $state(false);
 
 	let importMode = $state<'idle' | 'preview' | 'importing' | 'done'>('idle');
@@ -31,7 +32,7 @@
 	async function handleExport() {
 		exporting = true;
 		try {
-			const backup = await exportDatabase(includeSessions);
+			const backup = await exportDatabase(includeSessions, includeSourceDocuments);
 			const json = JSON.stringify(backup, null, 2);
 			const blob = new Blob([json], { type: 'application/json' });
 			const url = URL.createObjectURL(blob);
@@ -184,6 +185,20 @@
 			<div>
 				<span class="text-sm font-medium text-gray-900">Include study sessions</span>
 				<p class="text-xs text-gray-500">Session history, answers, and per-question progress</p>
+			</div>
+		</label>
+
+		<label class="mt-3 flex cursor-pointer items-center gap-3">
+			<input
+				type="checkbox"
+				bind:checked={includeSourceDocuments}
+				class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+			/>
+			<div>
+				<span class="text-sm font-medium text-gray-900">Include study guide files</span>
+				<p class="text-xs text-gray-500">
+					Embeds attached PDF/HTML guides as base64 — makes the backup much larger.
+				</p>
 			</div>
 		</label>
 

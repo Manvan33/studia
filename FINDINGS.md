@@ -2,6 +2,24 @@
 
 Technical findings, problems encountered, and solutions during development.
 
+## PDF.js v4 in SvelteKit / Vite
+
+**Problem**: `pdfjs-dist` v4 ships ES modules and a separate worker. Using it without configuring the worker URL causes "Setting up fake worker failed" errors.
+
+**Solution**: Lazy-import on demand and resolve the worker through Vite's `?url` suffix:
+```ts
+const pdfjs = await import('pdfjs-dist');
+const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
+pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+```
+Pass `isEvalSupported: false`, `disableAutoFetch: true`, `disableStream: true` to `getDocument()` for security & predictable behaviour with in-memory blobs. Note: in v4 `page.render()` no longer accepts a `canvas` field — pass only `canvasContext` and `viewport`.
+
+## Sandboxing Untrusted HTML Study Guides
+
+**Problem**: User-uploaded HTML guides may contain scripts, inline event handlers, or external resource loads. Rendering directly in the DOM is unsafe.
+
+**Solution**: Render in an `<iframe srcdoc>` with `sandbox="allow-same-origin"` (no `allow-scripts`). Before injection, parse the HTML inertly with `DOMParser`, strip `<script>`/`<iframe>`/`<object>`/`<embed>`, remove all `on*` attributes, and prepend a restrictive CSP `<meta>` tag (`default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'`). Highlights are inserted server-side (in our parsed DOM) so the iframe needs no scripting.
+
 ## Dexie liveQuery Observable Typing
 
 **Problem**: Dexie's `liveQuery()` returns an Observable, but when subscribing with a callback directly like `.subscribe((v) => ...)`, TypeScript infers `v` as `unknown` in some contexts.

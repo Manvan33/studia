@@ -28,6 +28,27 @@ export interface Topic {
 
 export type QuestionType = 'multiple_choice' | 'free_text' | 'multiple_select';
 
+/**
+ * Reference back to the original study guide for the correct answer.
+ * Used to display a verbatim justification next to the explanation,
+ * and to deep-link into an attached SourceDocument (PDF or HTML).
+ */
+export interface SourceRef {
+	/** Verbatim excerpt from the source material that justifies the correct answer. */
+	quote: string;
+	/** Optional structured locators within the source document. */
+	locator?: SourceLocator;
+}
+
+export interface SourceLocator {
+	/** 1-based page number for PDF sources. */
+	page?: number;
+	/** Section title or heading text (free-form). */
+	section?: string;
+	/** HTML fragment id (anchor) for HTML sources. */
+	anchor?: string;
+}
+
 export interface Question {
 	id: string;
 	chapterId: string;
@@ -43,6 +64,25 @@ export interface Question {
 	tags?: string[];
 	difficulty?: string;
 	isFinalAssessment: boolean;
+	sourceRef?: SourceRef;
+	createdAt: string;
+	updatedAt: string;
+}
+
+/**
+ * Original study guide document attached to a chapter (PDF or HTML).
+ * Stored locally in IndexedDB as a Blob — never uploaded.
+ */
+export type SourceDocumentKind = 'pdf' | 'html';
+
+export interface SourceDocument {
+	id: string;
+	chapterId: string;
+	title: string;
+	kind: SourceDocumentKind;
+	mime: string;
+	size: number;
+	blob: Blob;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -147,12 +187,14 @@ export interface ImportQuestion {
 	order: number;
 	tags?: string[];
 	difficulty?: string;
+	sourceRef?: SourceRef;
 }
 
 export interface DatabaseBackup {
-	version: 1;
+	version: 1 | 2;
 	exportedAt: string;
 	includesSessions: boolean;
+	includesSourceDocuments?: boolean;
 	data: {
 		themes: LearningTheme[];
 		chapters: Chapter[];
@@ -161,7 +203,22 @@ export interface DatabaseBackup {
 		sessions?: StudySession[];
 		sessionAnswers?: SessionAnswer[];
 		questionProgress?: QuestionProgress[];
+		/** Source documents serialised as base64 (only when includesSourceDocuments). */
+		sourceDocuments?: SerializedSourceDocument[];
 	};
+}
+
+export interface SerializedSourceDocument {
+	id: string;
+	chapterId: string;
+	title: string;
+	kind: SourceDocumentKind;
+	mime: string;
+	size: number;
+	/** Base64-encoded blob data. */
+	dataBase64: string;
+	createdAt: string;
+	updatedAt: string;
 }
 
 export interface ValidationResult {

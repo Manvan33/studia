@@ -6,6 +6,17 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Source references for correct answers**: every question can carry a `sourceRef` with a verbatim quote from the original study guide and an optional locator (`page`, `section`, `anchor`). Displayed under the explanation in study and history views.
+- **Per-chapter study guide attachments**: upload PDF or HTML originals on the chapter manage page (`/manage/chapters/:id`). Stored locally in IndexedDB as Blobs in a new `sourceDocuments` table (Dexie v2).
+- **Right-side source panel** (`SourcePanel.svelte`): renders the attached PDF (via `pdfjs-dist`, lazy-loaded, `isEvalSupported: false`) or HTML in a sandboxed iframe (`sandbox="allow-same-origin"`, restrictive CSP, scripts/event-handlers stripped). Auto-scrolls to the locator and highlights the matching quote.
+- LLM prompt updated (`src/lib/prompt.ts` + `PROMPT.md`) to require `sourceRef.quote` (verbatim) on every question with optional locator.
+- Import validation now accepts and validates `sourceRef` shape on questions.
+- Backup format v2 with opt-in `includesSourceDocuments` toggle on the Manage → Database Backup page; embeds attached PDF/HTML files as base64 when enabled.
+- New helpers in `src/lib/sources.ts`: `addSourceDocument`, `listSourceDocuments`, `getSourceDocument`, `deleteSourceDocument`, `renameSourceDocument`, `detectKind`, `readSourceText`, `normaliseForQuoteMatch`.
+- New runtime dep: `pdfjs-dist` (lazy-loaded only when a PDF source is opened).
+
+### Previous
+
 - GitHub Pages deployment workflow via GitHub Actions (`.github/workflows/deploy-pages.yml`) that builds and deploys static output from `build/`
 - Full database export/import: backup and restore all data via Manage → Database Backup (`/manage/data`)
 - Export toggle to include or exclude study sessions (history, answers, per-question progress)
