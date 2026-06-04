@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Backup format v2 with opt-in `includesSourceDocuments` toggle on the Manage → Database Backup page; embeds attached PDF/HTML files as base64 when enabled.
 - New helpers in `src/lib/sources.ts`: `addSourceDocument`, `listSourceDocuments`, `getSourceDocument`, `deleteSourceDocument`, `renameSourceDocument`, `detectKind`, `readSourceText`, `normaliseForQuoteMatch`.
 - New runtime dep: `pdfjs-dist` (lazy-loaded only when a PDF source is opened).
+- Post-import "Attach study guides" panel: after a successful import, the import page lists each newly imported chapter with a per-row file picker so PDFs/HTML can be attached without navigating to each chapter individually.
 
 ### Previous
 

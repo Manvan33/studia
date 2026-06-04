@@ -3,6 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { validateImportData, importData, extractJson, findExistingTheme } from '$lib/import';
 	import { LLM_PROMPT } from '$lib/prompt';
+	import { addSourceDocument, detectKind } from '$lib/sources';
+	import { db } from '$lib/db';
 	import type { ImportData, ValidationError, LearningTheme } from '$lib/types';
 
 	interface FileEntry {
@@ -11,6 +13,15 @@
 		errors: ValidationError[];
 		parseError: string;
 		existingTheme: LearningTheme | null;
+	}
+
+	interface AttachRow {
+		chapterId: string;
+		chapterTitle: string;
+		themeTitle: string;
+		fileName: string;
+		status: 'idle' | 'uploading' | 'done' | 'error';
+		error: string;
 	}
 
 	let jsonInput = $state('');
@@ -24,6 +35,10 @@
 	let pastePreview = $state<ImportData | null>(null);
 	let pasteErrors = $state<ValidationError[]>([]);
 	let pasteExistingTheme = $state<LearningTheme | null>(null);
+
+	// Post-import attach study guide panel
+	let attachRows = $state<AttachRow[]>([]);
+	let attachThemeTarget = $state<string>('');
 
 	const hasPreview = $derived(pastePreview !== null || fileEntries.length > 0);
 	const validFileEntries = $derived(fileEntries.filter((e) => e.data !== null));
@@ -188,14 +203,43 @@
 		});
 	}
 
+	async function buildAttachRows(themeIds: string[], chapterTitles: Set<string>) {
+		const themes = await db.themes.bulkGet(themeIds);
+		const themeMap = new Map<string, string>();
+		for (const t of themes) if (t) themeMap.set(t.id, t.title);
+
+		const rows: AttachRow[] = [];
+		for (const themeId of themeIds) {
+			const chapters = await db.chapters.where('themeId').equals(themeId).sortBy('order');
+			for (const ch of chapters) {
+				if (!chapterTitles.has(ch.title)) continue;
+				rows.push({
+					chapterId: ch.id,
+					chapterTitle: ch.title,
+					themeTitle: themeMap.get(themeId) ?? '',
+					fileName: '',
+					status: 'idle',
+					error: ''
+				});
+			}
+		}
+		attachRows = rows;
+	}
+
 	async function handleImportPaste() {
 		if (!pastePreview || importing) return;
 		importing = true;
 
 		try {
 			const rawPreview = $state.snapshot(pastePreview);
+			const chapterTitles = new Set(rawPreview.chapters.map((c) => c.title));
 			const { themeId } = await importData(rawPreview);
-			goto(`${base}/themes/${themeId}`);
+			attachThemeTarget = `${base}/themes/${themeId}`;
+			await buildAttachRows([themeId], chapterTitles);
+			importing = false;
+			if (attachRows.length === 0) {
+				goto(attachThemeTarget);
+			}
 		} catch (e: unknown) {
 			parseError = e instanceof Error ? e.message : 'Import failed';
 			importing = false;
@@ -209,23 +253,53 @@
 		try {
 			let lastThemeId = '';
 			const importedThemeIds = new Set<string>();
+			const chapterTitles = new Set<string>();
 
 			for (const entry of validFileEntries) {
 				const rawData = $state.snapshot(entry.data!);
+				for (const c of rawData.chapters) chapterTitles.add(c.title);
 				const { themeId } = await importData(rawData);
 				lastThemeId = themeId;
 				importedThemeIds.add(themeId);
 			}
 
-			if (importedThemeIds.size === 1) {
-				goto(`${base}/themes/${lastThemeId}`);
-			} else {
-				goto(`${base}/themes`);
+			attachThemeTarget =
+				importedThemeIds.size === 1 ? `${base}/themes/${lastThemeId}` : `${base}/themes`;
+			await buildAttachRows([...importedThemeIds], chapterTitles);
+			importing = false;
+			if (attachRows.length === 0) {
+				goto(attachThemeTarget);
 			}
 		} catch (e: unknown) {
 			parseError = e instanceof Error ? e.message : 'Import failed';
 			importing = false;
 		}
+	}
+
+	async function handleAttachFile(row: AttachRow, event: Event) {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+		input.value = '';
+		if (!file) return;
+		if (!detectKind(file)) {
+			row.status = 'error';
+			row.error = 'Only PDF or HTML files are accepted.';
+			return;
+		}
+		row.status = 'uploading';
+		row.error = '';
+		row.fileName = file.name;
+		try {
+			await addSourceDocument(row.chapterId, file);
+			row.status = 'done';
+		} catch (e: unknown) {
+			row.status = 'error';
+			row.error = e instanceof Error ? e.message : 'Upload failed';
+		}
+	}
+
+	function finishAttach() {
+		goto(attachThemeTarget);
 	}
 
 	function clearAll() {
@@ -236,6 +310,8 @@
 		parseError = '';
 		pasteExistingTheme = null;
 		importing = false;
+		attachRows = [];
+		attachThemeTarget = '';
 	}
 
 	async function copyPrompt() {
@@ -302,7 +378,76 @@
 		</div>
 	</div>
 
-	{#if !hasPreview}
+	{#if attachRows.length > 0}
+		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+			<h2 class="text-lg font-semibold text-gray-900">Attach study guides (optional)</h2>
+			<p class="mt-1 text-sm text-gray-500">
+				Upload the original PDF or HTML for any imported chapter. Quotes referenced in questions
+				will link to these files. You can also do this later from each chapter's manage page.
+			</p>
+
+			<ul class="mt-4 space-y-2">
+				{#each attachRows as row (row.chapterId)}
+					<li class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+						<div class="flex items-center justify-between gap-3">
+							<div class="min-w-0 flex-1">
+								<p class="truncate text-sm font-medium text-gray-900">{row.chapterTitle}</p>
+								{#if row.themeTitle}
+									<p class="truncate text-xs text-gray-500">{row.themeTitle}</p>
+								{/if}
+								{#if row.fileName}
+									<p class="mt-0.5 truncate text-xs text-gray-600">{row.fileName}</p>
+								{/if}
+								{#if row.status === 'error'}
+									<p class="mt-0.5 text-xs text-red-600">{row.error}</p>
+								{/if}
+							</div>
+							<div class="shrink-0">
+								{#if row.status === 'done'}
+									<span
+										class="inline-flex items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700"
+									>
+										<svg
+											class="h-3.5 w-3.5"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											stroke-width="3"
+											><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg
+										>
+										Attached
+									</span>
+								{:else if row.status === 'uploading'}
+									<span class="text-xs text-gray-500">Uploading…</span>
+								{:else}
+									<label
+										class="cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+									>
+										{row.status === 'error' ? 'Retry' : 'Choose file'}
+										<input
+											type="file"
+											accept=".pdf,.html,.htm,application/pdf,text/html"
+											class="hidden"
+											onchange={(e) => handleAttachFile(row, e)}
+										/>
+									</label>
+								{/if}
+							</div>
+						</div>
+					</li>
+				{/each}
+			</ul>
+
+			<div class="mt-6 flex justify-end gap-3">
+				<button
+					onclick={finishAttach}
+					class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+				>
+					Done
+				</button>
+			</div>
+		</div>
+	{:else if !hasPreview}
 		<div class="space-y-4">
 			<div>
 				<label
