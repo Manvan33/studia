@@ -22,6 +22,11 @@
 	let iframeEl: HTMLIFrameElement | null = $state(null);
 	let iframeSrcDoc = $state('');
 
+	// Last successful match target so the user can jump back any time.
+	let pdfMatchPage: HTMLElement | null = null;
+	let htmlMatchAnchorId: string | null = null;
+	let hasMatch = $state(false);
+
 	let panelOpen = $derived(request !== null);
 
 	let unsubscribe = () => {};
@@ -59,6 +64,9 @@
 
 	async function openDocument(doc: SourceDocument, r: SourceViewerRequest | null) {
 		activeDoc = doc;
+		pdfMatchPage = null;
+		htmlMatchAnchorId = null;
+		hasMatch = false;
 		if (doc.kind === 'pdf') {
 			iframeSrcDoc = '';
 			await renderPdf(doc, r);
@@ -109,61 +117,64 @@
 		// Highlight quote in body text. We do this server-side (here) so the
 		// iframe doesn't need to run scripts.
 		const quote = r?.quote;
+		let matchAnchor: string | null = null;
 		if (quote && parsed.body) {
-			highlightInDom(parsed.body, quote);
+			matchAnchor = highlightInDom(parsed.body, quote);
 		}
 
-		// Scroll to anchor on load via a one-shot inline script — but we run
-		// with sandbox without allow-scripts, so instead we use the URL fragment.
 		iframeSrcDoc = '<!DOCTYPE html>' + parsed.documentElement.outerHTML;
 
-		// After iframe loads, navigate to the anchor or first highlight.
 		queueMicrotask(() => {
 			const target = r?.locator?.anchor;
 			if (iframeEl) {
 				iframeEl.onload = () => {
 					try {
-						const win = iframeEl?.contentWindow;
 						const doc2 = iframeEl?.contentDocument;
-						if (!win || !doc2) return;
+						if (!doc2) return;
 						let el: Element | null = null;
 						if (target) el = doc2.getElementById(target);
+						if (!el && matchAnchor) el = doc2.getElementById(matchAnchor);
 						if (!el) el = doc2.querySelector('mark.studia-hl');
 						el?.scrollIntoView({ behavior: 'auto', block: 'center' });
+						if (matchAnchor || el) {
+							htmlMatchAnchorId = (el as HTMLElement | null)?.id || matchAnchor;
+							hasMatch = true;
+						}
 					} catch {
-						// cross-origin shouldn't happen with srcdoc but guard anyway
+						/* cross-origin shouldn't happen with srcdoc but guard anyway */
 					}
 				};
 			}
 		});
 	}
 
-	function highlightInDom(root: Element, quote: string): void {
+	function highlightInDom(root: Element, quote: string): string | null {
 		const target = normaliseForQuoteMatch(quote);
-		if (!target) return;
+		if (!target) return null;
 		const walker = root.ownerDocument!.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 		const nodes: Text[] = [];
 		let n: Node | null;
 		while ((n = walker.nextNode())) nodes.push(n as Text);
 
-		// Sliding-window match across consecutive text nodes.
 		for (let i = 0; i < nodes.length; i++) {
 			let combined = '';
 			for (let j = i; j < nodes.length && combined.length < target.length + 200; j++) {
 				combined += nodes[j].nodeValue ?? '';
 				if (normaliseForQuoteMatch(combined).includes(target)) {
-					// Just wrap the first node fully and stop — good enough for v1.
 					const tn = nodes[i];
 					if (tn.parentNode) {
 						const mark = tn.ownerDocument!.createElement('mark');
 						mark.className = 'studia-hl';
+						mark.id = 'studia-hl-anchor';
 						mark.textContent = tn.nodeValue ?? '';
 						tn.parentNode.replaceChild(mark, tn);
+						return 'studia-hl-anchor';
 					}
-					return;
+					return null;
 				}
 			}
 		}
+		return null;
 	}
 
 	async function renderPdf(doc: SourceDocument, r: SourceViewerRequest | null) {
@@ -226,6 +237,8 @@
 
 				if (targetPage === pageNum) {
 					scrollTarget = pageDiv;
+					pageDiv.style.outline = '3px solid #f59e0b';
+					pageDiv.style.outlineOffset = '-3px';
 				}
 				if (
 					!scrollTarget &&
@@ -233,12 +246,20 @@
 					normaliseForQuoteMatch(pageText).includes(targetQuote)
 				) {
 					scrollTarget = pageDiv;
-					pageDiv.style.outline = '2px solid #facc15';
+					pageDiv.style.outline = '3px solid #f59e0b';
+					pageDiv.style.outlineOffset = '-3px';
+					const badge = document.createElement('div');
+					badge.textContent = `Match on page ${pageNum}`;
+					badge.style.cssText =
+						'position:absolute;top:8px;right:8px;background:#f59e0b;color:#fff;font:600 11px system-ui,sans-serif;padding:2px 8px;border-radius:4px;pointer-events:none;';
+					pageDiv.appendChild(badge);
 				}
 			}
 
 			pdfStatus = '';
 			if (scrollTarget) {
+				pdfMatchPage = scrollTarget;
+				hasMatch = true;
 				scrollTarget.scrollIntoView({ behavior: 'auto', block: 'start' });
 			}
 		} catch (e) {
@@ -248,6 +269,20 @@
 
 	async function selectDocument(doc: SourceDocument) {
 		await openDocument(doc, request);
+	}
+
+	function jumpToMatch() {
+		if (activeDoc?.kind === 'pdf' && pdfMatchPage) {
+			pdfMatchPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			return;
+		}
+		if (activeDoc?.kind === 'html' && iframeEl?.contentDocument) {
+			const doc2 = iframeEl.contentDocument;
+			let el: Element | null = null;
+			if (htmlMatchAnchorId) el = doc2.getElementById(htmlMatchAnchorId);
+			if (!el) el = doc2.querySelector('mark.studia-hl');
+			el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
 	}
 
 	function close() {
@@ -296,10 +331,31 @@
 		{/if}
 
 		{#if request?.quote}
-			<div class="border-b border-gray-100 bg-yellow-50 px-4 py-2">
-				<p class="text-xs font-medium tracking-wide text-yellow-700 uppercase">Looking for</p>
-				<p class="mt-1 text-sm text-gray-800 italic">"{request.quote}"</p>
-			</div>
+			<button
+				type="button"
+				onclick={jumpToMatch}
+				disabled={!hasMatch}
+				class="flex w-full items-start gap-2 border-b border-yellow-200 bg-yellow-50 px-4 py-2 text-left transition-colors hover:bg-yellow-100 disabled:cursor-default disabled:hover:bg-yellow-50"
+				title={hasMatch ? 'Jump to match' : 'No match found in this document'}
+			>
+				<div class="min-w-0 flex-1">
+					<p class="text-xs font-medium tracking-wide text-yellow-700 uppercase">
+						{hasMatch ? 'Looking for — click to jump' : 'Looking for (no match found)'}
+					</p>
+					<p class="mt-1 text-sm text-gray-800 italic">"{request.quote}"</p>
+				</div>
+				{#if hasMatch}
+					<svg
+						class="mt-0.5 h-4 w-4 shrink-0 text-yellow-700"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						<path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+					</svg>
+				{/if}
+			</button>
 		{/if}
 
 		<div class="flex-1 overflow-auto bg-gray-100">

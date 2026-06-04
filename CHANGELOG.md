@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - New helpers in `src/lib/sources.ts`: `addSourceDocument`, `listSourceDocuments`, `getSourceDocument`, `deleteSourceDocument`, `renameSourceDocument`, `detectKind`, `readSourceText`, `normaliseForQuoteMatch`.
 - New runtime dep: `pdfjs-dist` (lazy-loaded only when a PDF source is opened).
 - Post-import "Attach study guides" panel: after a successful import, the import page lists each newly imported chapter with a per-row file picker so PDFs/HTML can be attached without navigating to each chapter individually.
+- Source panel "Looking for" banner is now a clickable jump-to-match control that re-scrolls (and re-highlights) the quote in the PDF page or HTML body. PDF page matches show a `Match on page N` badge; banner indicates when no match was found in the document.
 
 ### Previous
 
