@@ -121,6 +121,10 @@
 		if (quote && parsed.body) {
 			matchAnchor = highlightInDom(parsed.body, quote);
 		}
+		if (matchAnchor) {
+			htmlMatchAnchorId = matchAnchor;
+			hasMatch = true;
+		}
 
 		iframeSrcDoc = '<!DOCTYPE html>' + parsed.documentElement.outerHTML;
 
@@ -136,10 +140,6 @@
 						if (!el && matchAnchor) el = doc2.getElementById(matchAnchor);
 						if (!el) el = doc2.querySelector('mark.studia-hl');
 						el?.scrollIntoView({ behavior: 'auto', block: 'center' });
-						if (matchAnchor || el) {
-							htmlMatchAnchorId = (el as HTMLElement | null)?.id || matchAnchor;
-							hasMatch = true;
-						}
 					} catch {
 						/* cross-origin shouldn't happen with srcdoc but guard anyway */
 					}
@@ -151,30 +151,90 @@
 	function highlightInDom(root: Element, quote: string): string | null {
 		const target = normaliseForQuoteMatch(quote);
 		if (!target) return null;
-		const walker = root.ownerDocument!.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-		const nodes: Text[] = [];
-		let n: Node | null;
-		while ((n = walker.nextNode())) nodes.push(n as Text);
+		const doc = root.ownerDocument!;
+		const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+			acceptNode(node) {
+				const p = node.parentElement;
+				if (!p) return NodeFilter.FILTER_REJECT;
+				const tag = p.tagName.toLowerCase();
+				if (tag === 'script' || tag === 'style' || tag === 'noscript') {
+					return NodeFilter.FILTER_REJECT;
+				}
+				return NodeFilter.FILTER_ACCEPT;
+			}
+		});
 
-		for (let i = 0; i < nodes.length; i++) {
-			let combined = '';
-			for (let j = i; j < nodes.length && combined.length < target.length + 200; j++) {
-				combined += nodes[j].nodeValue ?? '';
-				if (normaliseForQuoteMatch(combined).includes(target)) {
-					const tn = nodes[i];
-					if (tn.parentNode) {
-						const mark = tn.ownerDocument!.createElement('mark');
-						mark.className = 'studia-hl';
-						mark.id = 'studia-hl-anchor';
-						mark.textContent = tn.nodeValue ?? '';
-						tn.parentNode.replaceChild(mark, tn);
-						return 'studia-hl-anchor';
-					}
-					return null;
+		// Build a flat character index across text nodes, mapping every
+		// position in the normalised concatenated string back to (node, offset).
+		const nodes: Text[] = [];
+		const map: Array<{ nodeIndex: number; offset: number }> = [];
+		let combined = '';
+		let prevWasSpace = true; // collapse leading whitespace
+		let n: Node | null;
+		while ((n = walker.nextNode())) {
+			const text = (n as Text).nodeValue ?? '';
+			if (!text) continue;
+			const idx = nodes.length;
+			nodes.push(n as Text);
+			for (let i = 0; i < text.length; i++) {
+				const ch = text[i];
+				const isSpace = /\s/.test(ch);
+				if (isSpace) {
+					if (prevWasSpace) continue;
+					combined += ' ';
+					map.push({ nodeIndex: idx, offset: i });
+					prevWasSpace = true;
+				} else {
+					combined += ch.toLowerCase();
+					map.push({ nodeIndex: idx, offset: i });
+					prevWasSpace = false;
 				}
 			}
 		}
-		return null;
+
+		const start = combined.indexOf(target);
+		if (start < 0) return null;
+		const end = start + target.length - 1;
+		const startMap = map[start];
+		const endMap = map[end];
+		if (!startMap || !endMap) return null;
+
+		// Wrap text nodes in [startMap.nodeIndex .. endMap.nodeIndex], splitting
+		// the boundary nodes so only the matched substring is highlighted.
+		const anchorId = 'studia-hl-anchor';
+		const startNode = nodes[startMap.nodeIndex];
+		const endNode = nodes[endMap.nodeIndex];
+		try {
+			let firstMark: HTMLElement | null = null;
+			for (let i = startMap.nodeIndex; i <= endMap.nodeIndex; i++) {
+				const node = nodes[i];
+				const len = (node.nodeValue ?? '').length;
+				if (len === 0) continue;
+				const from = node === startNode ? startMap.offset : 0;
+				const to = node === endNode ? Math.min(endMap.offset + 1, len) : len;
+				if (to <= from) continue;
+				const text = node.nodeValue ?? '';
+				const before = text.slice(0, from);
+				const middle = text.slice(from, to);
+				const after = text.slice(to);
+				const parent = node.parentNode;
+				if (!parent) continue;
+				const mark = doc.createElement('mark');
+				mark.className = 'studia-hl';
+				mark.textContent = middle;
+				if (!firstMark) {
+					mark.id = anchorId;
+					firstMark = mark;
+				}
+				if (before) parent.insertBefore(doc.createTextNode(before), node);
+				parent.insertBefore(mark, node);
+				if (after) parent.insertBefore(doc.createTextNode(after), node);
+				parent.removeChild(node);
+			}
+			return firstMark ? anchorId : null;
+		} catch {
+			return null;
+		}
 	}
 
 	async function renderPdf(doc: SourceDocument, r: SourceViewerRequest | null) {
