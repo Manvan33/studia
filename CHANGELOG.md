@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- History session links missing base path prefix, causing bad redirection on deployments with a base path (e.g., `/studia`).
+### Removed
+
+- Commented out boilerplate interfaces in `src/app.d.ts` for better readability.
+
 ### Added
 
 - **Source references for correct answers**: every question can carry a `sourceRef` with a verbatim quote from the original study guide and an optional locator (`page`, `section`, `anchor`). Displayed under the explanation in study and history views.
@@ -21,6 +28,7 @@ All notable changes to this project will be documented in this file.
 
 - GitHub Pages deployment workflow via GitHub Actions (`.github/workflows/deploy-pages.yml`) that builds and deploys static output from `build/`
 - Full database export/import: backup and restore all data via Manage → Database Backup (`/manage/data`)
+- Refactor `validateImportData` to use early returns by extracting a `validateTheme` helper, reducing nesting and simplifying control flow.
 - Export toggle to include or exclude study sessions (history, answers, per-question progress)
 - Import supports replace (clear existing) or merge mode
 - Backup file validation before import with error reporting
@@ -156,3 +164,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 ### Performance
 - Optimized `computeWeakTopics`, `computeWeakChapters`, and `computeFrequentlyMissed` in `src/lib/progress.ts` by replacing `O(N)` internal `.find()` traversals with `O(1)` Map lookups. This improves the performance from `O(N * M)` to `O(N + M)`, yielding a ~53x speedup on arrays of size 5000.
+## [0.0.2] - 2024-XX-XX
+
+### Changed
+
+- `src/lib/progress.ts`: Optimized `computeWeakTopics`, `computeWeakChapters`, `computeFrequentlyMissed`, and `computeFinalAssessmentPerformance` by replacing O(N) array `.find()` calls with O(1) `Map` and `Set` lookups. This significantly improved the performance of `getProgressStats()`.

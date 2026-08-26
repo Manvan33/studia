@@ -118,6 +118,8 @@ function computeWeakTopics(
 	}
 
 	const topicStats = new Map<string, { correct: number; total: number }>();
+	const questionMap = new Map<string, Question>(questions.map((q) => [q.id, q]));
+	const topicMap = new Map<string, Topic>(topics.map((t) => [t.id, t]));
 
 	for (const p of progress) {
 		const q = questionMap.get(p.questionId);
@@ -161,6 +163,8 @@ function computeWeakChapters(
 	}
 
 	const chapterStats = new Map<string, { correct: number; total: number }>();
+	const questionMap = new Map<string, Question>(questions.map((q) => [q.id, q]));
+	const chapterMap = new Map<string, Chapter>(chapters.map((c) => [c.id, c]));
 
 	for (const p of progress) {
 		const q = questionMap.get(p.questionId);
@@ -262,24 +266,30 @@ function computeFinalAssessmentPerformance(
 	chapters: Chapter[],
 	answers: SessionAnswer[]
 ): FinalAssessmentStat[] {
+	const faQuestions = questions.filter((q) => q.isFinalAssessment);
+
+	const chapterFaQuestionIds = new Map<string, Set<string>>();
+	for (const q of faQuestions) {
+		if (!chapterFaQuestionIds.has(q.chapterId)) {
+			chapterFaQuestionIds.set(q.chapterId, new Set<string>());
+		}
+		chapterFaQuestionIds.get(q.chapterId)!.add(q.id);
+	}
+
 	return chapters
 		.sort((a, b) => a.order - b.order)
 		.map((chapter) => {
-			const faQuestions = questions.filter(
-				(q) => q.chapterId === chapter.id && q.isFinalAssessment
-			);
+			const chapterFaIds = chapterFaQuestionIds.get(chapter.id) || new Set<string>();
+
 			const faAnswers = answers.filter(
-				(a) =>
-					faQuestions.some((q) => q.id === a.questionId) &&
-					!a.skipped &&
-					a.finalResult === 'correct'
+				(a) => chapterFaIds.has(a.questionId) && !a.skipped && a.finalResult === 'correct'
 			);
-			const attempted = answers.some((a) => faQuestions.some((q) => q.id === a.questionId));
+			const attempted = answers.some((a) => chapterFaIds.has(a.questionId));
 
 			return {
 				chapterId: chapter.id,
 				chapterTitle: chapter.title,
-				totalQuestions: faQuestions.length,
+				totalQuestions: chapterFaIds.size,
 				correct: faAnswers.length,
 				attempted
 			};
