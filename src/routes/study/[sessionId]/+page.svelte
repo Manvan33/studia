@@ -5,6 +5,7 @@
 	import { db } from '$lib/db';
 	import { submitAnswer, overrideAnswer, completeSession } from '$lib/sessions';
 	import { renderMarkdown } from '$lib/markdown';
+	import { sourceViewer } from '$lib/sourceViewer';
 	import SourceQuote from '$lib/components/SourceQuote.svelte';
 	import type { StudySession, Question, SessionAnswer } from '$lib/types';
 
@@ -21,6 +22,7 @@
 	let currentAnswer = $state<SessionAnswer | undefined>();
 	let loading = $state(true);
 	let submitting = $state(false);
+	let explanationEl = $state<HTMLElement | null>(null);
 
 	$effect(() => {
 		loadSession();
@@ -179,7 +181,108 @@
 			selectedChoices = [...selectedChoices, choice];
 		}
 	}
+
+	function openStudyGuide() {
+		if (currentQuestion?.sourceRef) {
+			sourceViewer.show({
+				chapterId: currentQuestion.chapterId,
+				locator: currentQuestion.sourceRef.locator,
+				quote: currentQuestion.sourceRef.quote
+			});
+		}
+		if (explanationEl) {
+			explanationEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	}
+
+		const target = event.target as HTMLElement | null;
+		const isEditable =
+			target &&
+			(target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+
+		// Don't override default keyboard activation for focused controls (buttons/links/etc.).
+		// Exception: allow Enter-in-textarea to submit free-text answers.
+		const isFocusableControl = !!target?.closest(
+			'button, a, input, textarea, select, option, [role="button"], [role="link"]'
+		);
+		if (isFocusableControl && event.key === 'Enter' && target?.tagName !== 'TEXTAREA') return;
+
+		if (isEditable) {
+			if (event.key === 'Enter' && !event.shiftKey && target?.tagName === 'TEXTAREA') {
+				if (!showExplanation && !submitting) {
+					if (userAnswer.trim()) {
+						event.preventDefault();
+						handleSubmit();
+					}
+				}
+			}
+			return;
+		}
+
+		if (event.ctrlKey || event.altKey || event.metaKey) return;
+
+		if (event.key >= '1' && event.key <= '9') {
+			const index = parseInt(event.key, 10) - 1;
+			if (!showExplanation && index >= 0 && index < shuffledChoices.length) {
+				event.preventDefault();
+				if (currentQuestion?.type === 'multiple_choice') {
+					selectChoice(shuffledChoices[index]);
+				} else if (currentQuestion?.type === 'multiple_select') {
+					toggleChoice(shuffledChoices[index]);
+				}
+			}
+			return;
+		}
+
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			if (!showExplanation) {
+				const canSubmit =
+					currentQuestion?.type === 'multiple_select'
+						? selectedChoices.length > 0
+						: userAnswer.trim().length > 0;
+				if (canSubmit && !submitting) {
+					handleSubmit();
+				}
+			} else {
+				if (currentIndex + 1 >= questions.length) {
+					finishSession();
+				} else {
+					nextQuestion();
+				}
+			}
+			return;
+		}
+
+		if (event.key === 'e' || event.key === 'E') {
+			event.preventDefault();
+			openStudyGuide();
+			return;
+		}
+
+		if (event.key === 'ArrowLeft') {
+			if (canGoPrevious) {
+				event.preventDefault();
+				goToPrevious();
+			}
+			return;
+		}
+
+		if (event.key === 'ArrowRight') {
+			if (showExplanation) {
+				event.preventDefault();
+				if (currentIndex + 1 >= questions.length) {
+					finishSession();
+				} else {
+					nextQuestion();
+				}
+			}
+			return;
+		}
+	}
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 {#if loading}
 	<div class="flex items-center justify-center py-20">
@@ -350,17 +453,22 @@
 			{#if !showExplanation}
 				{#if currentQuestion.type === 'multiple_choice' && shuffledChoices.length > 0}
 					<div class="mt-4 space-y-2" role="radiogroup" aria-label="Answer choices">
-						{#each shuffledChoices as choice}
+						{#each shuffledChoices as choice, idx}
 							<button
 								onclick={() => selectChoice(choice)}
 								role="radio"
 								aria-checked={userAnswer === choice}
-								class="w-full rounded-lg border-2 px-4 py-3 text-left text-sm transition-colors {userAnswer ===
+								class="flex w-full items-center gap-3 rounded-lg border-2 px-4 py-3 text-left text-sm transition-colors {userAnswer ===
 								choice
 									? 'border-primary-500 bg-primary-50 font-medium text-primary-700'
 									: 'border-gray-200 hover:border-gray-300'}"
 							>
-								{choice}
+								<span
+									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-100 text-xs font-semibold text-gray-600"
+								>
+									{idx + 1}
+								</span>
+								<span class="flex-1">{choice}</span>
 							</button>
 						{/each}
 					</div>
@@ -370,7 +478,7 @@
 							Select all that apply
 						</p>
 						<div class="space-y-2" role="group" aria-label="Answer choices — select all that apply">
-							{#each shuffledChoices as choice}
+							{#each shuffledChoices as choice, idx}
 								<button
 									onclick={() => toggleChoice(choice)}
 									class="flex w-full items-center gap-3 rounded-lg border-2 px-4 py-3 text-left text-sm transition-colors {selectedChoices.includes(
@@ -379,6 +487,11 @@
 										? 'border-primary-500 bg-primary-50 font-medium text-primary-700'
 										: 'border-gray-200 hover:border-gray-300'}"
 								>
+									<span
+										class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-100 text-xs font-semibold text-gray-600"
+									>
+										{idx + 1}
+									</span>
 									<div
 										class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 {selectedChoices.includes(
 											choice
@@ -401,7 +514,7 @@
 											>
 										{/if}
 									</div>
-									<span>{choice}</span>
+									<span class="flex-1">{choice}</span>
 								</button>
 							{/each}
 						</div>
@@ -411,37 +524,50 @@
 					<textarea
 						id="free-text-answer"
 						bind:value={userAnswer}
-						placeholder="Type your answer..."
+						placeholder="Type your answer... (Press Enter to submit)"
 						class="mt-4 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
 						rows="3"
 					></textarea>
 				{/if}
 
-				<div class="mt-4 flex gap-3">
-					{#if canGoPrevious}
+				<div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+					<div class="flex gap-2">
+						{#if canGoPrevious}
+							<button
+								onclick={goToPrevious}
+								class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
+							>
+								← Previous <span class="text-xs text-gray-400">(←)</span>
+							</button>
+						{/if}
+						{#if currentQuestion.sourceRef}
+							<button
+								onclick={openStudyGuide}
+								class="rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2.5 text-sm font-medium text-yellow-800 hover:bg-yellow-100"
+								title="Open study guide"
+							>
+								📖 Study guide <span class="text-xs opacity-75">(E)</span>
+							</button>
+						{/if}
+					</div>
+					<div class="flex flex-1 justify-end gap-2">
 						<button
-							onclick={goToPrevious}
+							onclick={handleSubmit}
+							disabled={(currentQuestion.type === 'multiple_select'
+								? selectedChoices.length === 0
+								: !userAnswer.trim()) || submitting}
+							class="max-w-xs flex-1 rounded-lg bg-primary-600 px-4 py-2.5 font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							Submit Answer <span class="text-xs opacity-75">(Enter ↵)</span>
+						</button>
+						<button
+							onclick={handleSkip}
+							disabled={submitting}
 							class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
 						>
-							← Previous
+							Skip
 						</button>
-					{/if}
-					<button
-						onclick={handleSubmit}
-						disabled={(currentQuestion.type === 'multiple_select'
-							? selectedChoices.length === 0
-							: !userAnswer.trim()) || submitting}
-						class="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						Submit Answer
-					</button>
-					<button
-						onclick={handleSkip}
-						disabled={submitting}
-						class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
-					>
-						Skip
-					</button>
+					</div>
 				</div>
 			{:else if currentAnswer}
 				<div class="mt-4 space-y-4" aria-live="polite">
@@ -660,8 +786,22 @@
 						</div>
 					{/if}
 
-					<div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-						<p class="text-xs font-medium text-blue-600 uppercase">Explanation</p>
+					<div
+						bind:this={explanationEl}
+						class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3"
+					>
+						<div class="flex items-center justify-between">
+							<p class="text-xs font-medium text-blue-600 uppercase">Explanation</p>
+							{#if currentQuestion.sourceRef}
+								<button
+									onclick={openStudyGuide}
+									class="text-xs font-medium text-blue-700 hover:underline"
+									title="Press E to open study guide"
+								>
+									Open Study guide <span class="opacity-75">(E)</span>
+								</button>
+							{/if}
+						</div>
 						<div class="prose prose-sm mt-1 max-w-none text-gray-700">
 							{@html renderMarkdown(currentQuestion.explanation)}
 						</div>
@@ -724,7 +864,7 @@
 								onclick={goToPrevious}
 								class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
 							>
-								← Previous
+								← Previous <span class="text-xs text-gray-400">(←)</span>
 							</button>
 						{/if}
 						<button
@@ -732,6 +872,7 @@
 							class="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700"
 						>
 							{currentIndex + 1 >= questions.length ? 'Finish' : 'Next Question'}
+							<span class="text-xs opacity-75">(Enter ↵ / →)</span>
 						</button>
 					</div>
 				</div>
