@@ -195,13 +195,19 @@
 		}
 	}
 
-	function handleKeydown(event: KeyboardEvent) {
 		const target = event.target as HTMLElement | null;
-		const isInput =
+		const isEditable =
 			target &&
 			(target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
 
-		if (isInput) {
+		// Don't override default keyboard activation for focused controls (buttons/links/etc.).
+		// Exception: allow Enter-in-textarea to submit free-text answers.
+		const isFocusableControl = !!target?.closest(
+			'button, a, input, textarea, select, option, [role="button"], [role="link"]'
+		);
+		if (isFocusableControl && event.key === 'Enter' && target?.tagName !== 'TEXTAREA') return;
+
+		if (isEditable) {
 			if (event.key === 'Enter' && !event.shiftKey && target?.tagName === 'TEXTAREA') {
 				if (!showExplanation && !submitting) {
 					if (userAnswer.trim()) {
