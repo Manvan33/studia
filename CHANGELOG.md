@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Improved
+
+- **Session Summary Page**:
+  - Displays Theme, Chapter, and Topic metadata in a top summary card.
+  - Groups questions & answers under the "Per Topic" section with interactive collapsible topic tiles.
+  - Each topic tile displays question counts and score breakdown badges (correct, incorrect, skipped), expandable to reveal question details and explanations.
+  - Includes "Expand All" and "Collapse All" controls.
+
 ### Added
 
 - **Source references for correct answers**: every question can carry a `sourceRef` with a verbatim quote from the original study guide and an optional locator (`page`, `section`, `anchor`). Displayed under the explanation in study and history views.

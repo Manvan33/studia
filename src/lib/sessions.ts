@@ -282,6 +282,20 @@ export async function completeSession(sessionId: string): Promise<SessionScoring
 				else existing.incorrect++;
 				perTopicMap.set(q.topicId, existing);
 			}
+		} else if (q.isFinalAssessment) {
+			const existing = perTopicMap.get('final_assessment') ?? {
+				topicId: 'final_assessment',
+				topicTitle: 'Final Assessment',
+				total: 0,
+				correct: 0,
+				incorrect: 0,
+				skipped: 0
+			};
+			existing.total++;
+			if (!answer || answer.skipped) existing.skipped++;
+			else if (answer.finalResult === 'correct') existing.correct++;
+			else existing.incorrect++;
+			perTopicMap.set('final_assessment', existing);
 		}
 
 		if (!chapterCache.has(q.chapterId)) {
