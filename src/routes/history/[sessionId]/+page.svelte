@@ -87,6 +87,7 @@
 	const topicGroups = $derived.by(() => {
 		const groups: TopicGroup[] = [];
 		const groupMap = new Map<string, TopicGroup>();
+		const topicMap = new Map(topics.map((t) => [t.id, t.title]));
 
 		for (const q of questions) {
 			const groupId = q.topicId ?? (q.isFinalAssessment ? 'final_assessment' : 'other');
@@ -95,7 +96,7 @@
 			if (!group) {
 				let title = 'Unknown Topic';
 				if (q.topicId) {
-					title = topics.find((t) => t.id === q.topicId)?.title ?? 'Unknown Topic';
+					title = topicMap.get(q.topicId) ?? 'Unknown Topic';
 				} else if (q.isFinalAssessment) {
 					title = 'Final Assessment';
 				} else {
@@ -346,7 +347,7 @@
 								onclick={() => toggleTopic(group.id)}
 								aria-expanded={isExpanded}
 								aria-controls={`topic-group-${group.id}`}
-								class="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-gray-50 focus:outline-none"
+								class="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
 							>
 								<div class="flex items-center gap-3">
 									<svg
