@@ -21,7 +21,7 @@ function sanitize(html: string): string {
 	do {
 		previous = current;
 		current = current
-			.replace(/<script\b[\s\S]*?<\/script>/gi, '')
+			.replace(/<script\b[\s\S]*?<\/script\s*>/gi, '')
 			.replace(/on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
 	} while (current !== previous);
 
