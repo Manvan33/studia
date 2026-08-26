@@ -1,0 +1,421 @@
+{
+    "theme": {
+        "title": "CWNA Chapter 1: Overview of Wireless Standards, Organizations, and Fundamentals",
+        "description": "A comprehensive study guide covering the history of WLANs, standards organizations, network architecture layers, and RF communication fundamentals."
+    },
+    "chapters": [
+        {
+            "title": "Chapter 1: Overview of Wireless Standards, Organizations, and Fundamentals",
+            "description": "Explores the history of wireless networks, the roles of regulatory bodies and standards organizations, basic network design, and RF modulation techniques.",
+            "order": 1,
+            "topics": [
+                {
+                    "title": "History and Basics of WLANs",
+                    "description": "Covers the origins of wireless networking, early protocols, and the regulatory realities of unlicensed frequency bands.",
+                    "order": 1,
+                    "questions": [
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "The ALOHAnet network developed in 1970 is credited as a foundational building block for which of the following Medium Access Control (MAC) technologies used in modern 802.11 radios?",
+                            "choices": [
+                                "Carrier Sense Multiple Access with Collision Avoidance (CSMA/CA)",
+                                "Carrier Sense Multiple Access with Collision Detection (CSMA/CD)",
+                                "Orthogonal Frequency-Division Multiple Access (OFDMA)",
+                                "Token Ring"
+                            ],
+                            "correctAnswer": "Carrier Sense Multiple Access with Collision Avoidance (CSMA/CA)",
+                            "explanation": "ALOHAnet used a layer 2 protocol called ALOHA on a shared wireless medium. This technology is credited as a building block for the CSMA/CA (Carrier Sense Multiple Access with Collision Avoidance) MAC technology used in 802.11 radios, as well as CSMA/CD used in Ethernet.",
+                            "order": 1
+                        },
+                        {
+                            "type": "free_text",
+                            "prompt": "What was the original name of the organization that was created to enforce interoperability between 802.11 vendors and later became the Wi-Fi Alliance?",
+                            "correctAnswer": "WECA",
+                            "explanation": "The Wireless Ethernet Compatibility Alliance (WECA) was founded in August 1999 to further define the IEEE standard and force interoperability between vendors. It changed its name to the Wi-Fi Alliance in October 2002.",
+                            "order": 2
+                        },
+                        {
+                            "type": "multiple_select",
+                            "prompt": "Which of the following statements accurately describe the characteristics and regulatory realities of operating in an unlicensed frequency band?",
+                            "choices": [
+                                "Operators are exempt from financial costs associated with licensing the frequency.",
+                                "Operators must still abide by transmission regulations such as maximum equivalent isotropically radiated power (EIRP).",
+                                "Operators have legal recourse if another individual's transmissions cause interference, provided the interferer is violating FCC rules.",
+                                "Unlicensed bands guarantee exclusive spectrum access for enterprise deployments."
+                            ],
+                            "correctAnswers": [
+                                "Operators are exempt from financial costs associated with licensing the frequency.",
+                                "Operators must still abide by transmission regulations such as maximum equivalent isotropically radiated power (EIRP)."
+                            ],
+                            "explanation": "Operating in an unlicensed frequency band is free from licensing costs, but operators must still abide by transmission regulations (like max EIRP, indoor/outdoor use, etc.). A major disadvantage is that the spectrum is shared, meaning anyone else can transmit and cause interference, and operators have no legal recourse as long as the interfering party is also following the rules.",
+                            "order": 3
+                        }
+                    ]
+                },
+                {
+                    "title": "Standards Organizations",
+                    "description": "Details the roles of the FCC, ITU-R, IEEE, IETF, Wi-Fi Alliance, and ISO in the wireless networking industry.",
+                    "order": 2,
+                    "questions": [
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "In the context of WLAN governance, which of the following accurately delineates the responsibilities of the IEEE and the Wi-Fi Alliance?",
+                            "choices": [
+                                "The IEEE defines the WLAN communication standards and MAC/PHY specifications, while the Wi-Fi Alliance defines interoperability certification programs.",
+                                "The IEEE regulates RF spectrum allocation, while the Wi-Fi Alliance creates the 802.11 standards.",
+                                "The Wi-Fi Alliance defines the 802.11 MAC layer protocols, while the IEEE enforces maximum transmit power rules.",
+                                "The IEEE performs certification testing for vendor interoperability, while the Wi-Fi Alliance markets the Wi-Fi brand."
+                            ],
+                            "correctAnswer": "The IEEE defines the WLAN communication standards and MAC/PHY specifications, while the Wi-Fi Alliance defines interoperability certification programs.",
+                            "explanation": "The IEEE (specifically the 802.11 working group) creates the technical standards for compatibility and coexistence at the MAC and PHY layers. The Wi-Fi Alliance performs certification testing to ensure that vendor equipment actually interoperates according to those standards.",
+                            "order": 1
+                        },
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "The IETF produces documents known as Request for Comments (RFCs). Which of the following statements is true regarding the RFC standardization process?",
+                            "choices": [
+                                "When an RFC becomes an Internet Standard, it retains its original RFC number but is also assigned an STD number.",
+                                "RFCs are voted on by a formal committee within the IESG before being published.",
+                                "Once an RFC is made obsolete by a newer document, its original RFC number is reassigned to the new standard.",
+                                "All RFCs published by the IETF are considered binding Internet Standards."
+                            ],
+                            "correctAnswer": "When an RFC becomes an Internet Standard, it retains its original RFC number but is also assigned an STD number.",
+                            "explanation": "When an RFC becomes a standard, it keeps its original RFC number but is additionally given an STD label (e.g., STD xxxx). RFC numbers are sequential and never reused, even if the document becomes obsolete. Not all RFCs are standards (some are Informational or Experimental), and decisions are made by 'rough consensus, not formal voting.'",
+                            "order": 2
+                        },
+                        {
+                            "type": "multiple_select",
+                            "prompt": "Which of the following security enhancements are introduced by the Wi-Fi CERTIFIED WPA3 and Wi-Fi Enhanced Open programs?",
+                            "choices": [
+                                "WPA3-Personal leverages Simultaneous Authentication of Equals (SAE) to protect against password guessing attacks.",
+                                "Wi-Fi Enhanced Open uses Opportunistic Wireless Encryption (OWE) to protect against passive eavesdropping without requiring a password.",
+                                "WPA3-Enterprise mandates the use of 256-bit cryptographic strength for all connections.",
+                                "Wi-Fi Enhanced Open requires the use of a captive portal for initial client authentication."
+                            ],
+                            "correctAnswers": [
+                                "WPA3-Personal leverages Simultaneous Authentication of Equals (SAE) to protect against password guessing attacks.",
+                                "Wi-Fi Enhanced Open uses Opportunistic Wireless Encryption (OWE) to protect against passive eavesdropping without requiring a password."
+                            ],
+                            "explanation": "WPA3-Personal uses SAE to provide stronger protection against password guessing. Wi-Fi Enhanced Open uses OWE to provide unique individual encryption against passive eavesdropping on open networks without requiring a password. WPA3-Enterprise offers the equivalent of 192-bit cryptographic strength (not a mandatory 256-bit for all).",
+                            "order": 3
+                        },
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "The Wi-Fi CERTIFIED Voice-Enterprise program requires support for several specific IEEE 802.11 amendments and mechanisms to ensure high voice quality. Which of the following is a mandatory requirement for this certification?",
+                            "choices": [
+                                "Support for seamless roaming and prioritization using Wi-Fi Multimedia (WMM) with traffic placed in the AC_VO queue.",
+                                "Support for Tunneled Direct Link Setup (TDLS) to allow IP phones to communicate directly.",
+                                "Mandatory use of the 60 GHz frequency band to ensure low latency.",
+                                "Support for Opportunistic Wireless Encryption (OWE) to secure voice payloads."
+                            ],
+                            "correctAnswer": "Support for seamless roaming and prioritization using Wi-Fi Multimedia (WMM) with traffic placed in the AC_VO queue.",
+                            "explanation": "Voice-Enterprise equipment must support seamless roaming between APs and prioritization using WMM, specifically placing voice traffic in the highest-priority queue (AC_VO). It also requires WPA2-Enterprise security, WMM-Power Save, and WMM-Admission Control.",
+                            "order": 4
+                        },
+                        {
+                            "type": "free_text",
+                            "prompt": "The IEEE 802.11-2020 standard defines communication mechanisms at the Physical layer and which specific sublayer of the Data-Link layer?",
+                            "correctAnswer": "MAC",
+                            "explanation": "The IEEE 802.11 standard defines mechanisms only at the Physical (PHY) layer and the Medium Access Control (MAC) sublayer of the Data-Link layer in the OSI model.",
+                            "order": 5
+                        },
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "How does Wi-Fi Aware differ fundamentally from Wi-Fi Direct in its approach to peer-to-peer connectivity?",
+                            "choices": [
+                                "Wi-Fi Aware enables power-efficient discovery of nearby services in the background before establishing a connection, whereas Wi-Fi Direct is primarily for establishing one-to-one connections for immediate data transfer.",
+                                "Wi-Fi Aware requires an existing WLAN infrastructure to synchronize devices, whereas Wi-Fi Direct operates entirely independently of access points.",
+                                "Wi-Fi Aware is designed exclusively for 60 GHz multi-gigabit transfers, whereas Wi-Fi Direct operates in the 2.4 GHz and 5 GHz bands.",
+                                "Wi-Fi Aware uses Opportunistic Wireless Encryption (OWE), whereas Wi-Fi Direct relies on WEP for legacy compatibility."
+                            ],
+                            "correctAnswer": "Wi-Fi Aware enables power-efficient discovery of nearby services in the background before establishing a connection, whereas Wi-Fi Direct is primarily for establishing one-to-one connections for immediate data transfer.",
+                            "explanation": "Wi-Fi Aware uses neighbor awareness networking (NAN) for power-efficient, background discovery of services before making a connection, and does not require WLAN infrastructure. Wi-Fi Direct is used to establish direct one-to-one or small group connections for immediate tasks like printing or sharing.",
+                            "order": 6
+                        },
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "The Wi-Fi Alliance introduced the Wi-Fi 6E certification as an extension to Wi-Fi 6. What is the primary distinction of Wi-Fi 6E?",
+                            "choices": [
+                                "It certifies the same 802.11ax features and capabilities but extends them into the newly approved 6 GHz frequency band.",
+                                "It introduces Orthogonal Frequency-Division Multiple Access (OFDMA) which was absent in the base Wi-Fi 6 certification.",
+                                "It mandates the use of WPA3-Enterprise with 192-bit encryption, whereas Wi-Fi 6 only requires WPA2.",
+                                "It is specifically designed for directional multi-gigabit (DMG) radios operating in the 60 GHz band."
+                            ],
+                            "correctAnswer": "It certifies the same 802.11ax features and capabilities but extends them into the newly approved 6 GHz frequency band.",
+                            "explanation": "Wi-Fi 6E is an extension of Wi-Fi 6 that brings the exact same 802.11ax features (like OFDMA, better power efficiency, etc.) into the 6 GHz frequency band, taking advantage of the 1200 MHz of unlicensed spectrum recently approved by the FCC.",
+                            "order": 7
+                        },
+                        {
+                            "type": "multiple_select",
+                            "prompt": "The ITU-R defines three radio regulatory regions geographically. Which of the following correctly maps the regions to their respective geographic areas?",
+                            "choices": [
+                                "Region 1: Europe, Middle East, and Africa",
+                                "Region 2: Americas",
+                                "Region 3: Asia and Oceania",
+                                "Region 4: Antarctica and International Waters"
+                            ],
+                            "correctAnswers": [
+                                "Region 1: Europe, Middle East, and Africa",
+                                "Region 2: Americas",
+                                "Region 3: Asia and Oceania"
+                            ],
+                            "explanation": "The ITU-R divides the world into three main radio regulatory regions: Region 1 (Europe, Middle East, Africa), Region 2 (Americas), and Region 3 (Asia and Oceania). There is no Region 4.",
+                            "order": 8
+                        }
+                    ]
+                },
+                {
+                    "title": "Network Architecture (Core, Distribution, Access)",
+                    "description": "Examines where WLAN technology fits within the traditional hierarchical network design model.",
+                    "order": 3,
+                    "questions": [
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "In a traditional hierarchical network design, where are 802.11 wireless bridge links typically implemented, and what is their primary function?",
+                            "choices": [
+                                "At the distribution layer, to wirelessly connect two separate wired networks or buildings.",
+                                "At the core layer, to perform high-speed switching and packet manipulation between data centers.",
+                                "At the access layer, to provide point-to-multipoint connectivity directly to end-user client stations.",
+                                "At the management plane, to monitor and administer the telecommunications network."
+                            ],
+                            "correctAnswer": "At the distribution layer, to wirelessly connect two separate wired networks or buildings.",
+                            "explanation": "Wireless bridge links are typically used to provide connectivity between buildings, connecting two separate wired networks. This routing of data traffic between networks is associated with the distribution layer.",
+                            "order": 1
+                        },
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "Telecommunication networks are often defined by three logical planes of operation. Which plane is characterized as the 'intelligence' of the network?",
+                            "choices": [
+                                "Control plane",
+                                "Management plane",
+                                "Data plane",
+                                "Forwarding plane"
+                            ],
+                            "correctAnswer": "Control plane",
+                            "explanation": "The control plane is characterized as the intelligence of a network. The management plane is for monitoring and administration, and the data plane carries the actual user traffic.",
+                            "order": 2
+                        },
+                        {
+                            "type": "free_text",
+                            "prompt": "Most 802.11 wireless networks are designed as point-to-multipoint solutions to provide connectivity to end users. At which layer of the hierarchical network design model are these typically installed?",
+                            "correctAnswer": "Access",
+                            "explanation": "802.11 wireless networking is most often implemented at the access layer, providing direct connectivity to end-user client stations through strategically deployed access points.",
+                            "order": 3
+                        }
+                    ]
+                },
+                {
+                    "title": "Communications Fundamentals",
+                    "description": "Explores RF communication basics including duplexing, wave properties, and keying methods (ASK, FSK, PSK).",
+                    "order": 4,
+                    "questions": [
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "Which of the following best describes the dialogue method used by standard IEEE 802.11 wireless networks?",
+                            "choices": [
+                                "Half-duplex, meaning both devices can transmit and receive, but only one device can transmit at a time on the RF medium.",
+                                "Full-duplex, meaning both devices can transmit and receive simultaneously on the same channel.",
+                                "Simplex, meaning the access point only transmits and the client station only receives.",
+                                "Echo-duplex, meaning the transmitter receives its own signal to detect collisions."
+                            ],
+                            "correctAnswer": "Half-duplex, meaning both devices can transmit and receive, but only one device can transmit at a time on the RF medium.",
+                            "explanation": "All RF communications by nature are half-duplex. Both devices are capable of transmitting and receiving, but only one device can transmit at a time on a given channel to avoid collisions.",
+                            "order": 1
+                        },
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "Why must Amplitude-Shift Keying (ASK) be used cautiously in wireless communications?",
+                            "choices": [
+                                "Wireless signals are highly susceptible to noise and interference, which typically affect the amplitude of a signal and can cause the receiver to misinterpret the data.",
+                                "ASK requires significantly more bandwidth than Frequency-Shift Keying (FSK) to transmit the same amount of data.",
+                                "ASK is a state transition technique, making it difficult for the receiver to synchronize with the transmitter's clock.",
+                                "ASK cannot be used in unlicensed frequency bands due to FCC regulations on maximum equivalent isotropically radiated power (EIRP)."
+                            ],
+                            "correctAnswer": "Wireless signals are highly susceptible to noise and interference, which typically affect the amplitude of a signal and can cause the receiver to misinterpret the data.",
+                            "explanation": "ASK varies the height (amplitude) of a signal to represent binary data. Because noise or interference usually affects the amplitude of an RF signal, it can easily cause the receiving station to misinterpret a 0 as a 1 (or vice versa), making ASK less reliable in noisy environments.",
+                            "order": 2
+                        },
+                        {
+                            "type": "multiple_select",
+                            "prompt": "To create a carrier signal capable of encoding data, a transmitter must modulate a base signal. Which of the following components of a wave can be modified to achieve this modulation?",
+                            "choices": [
+                                "Amplitude",
+                                "Frequency",
+                                "Phase",
+                                "Propagation speed"
+                            ],
+                            "correctAnswers": [
+                                "Amplitude",
+                                "Frequency",
+                                "Phase"
+                            ],
+                            "explanation": "The three components of a wave that can fluctuate or be modified to create a carrier signal are amplitude, frequency, and phase. Propagation speed is a constant (the speed of light) and cannot be modulated to encode data.",
+                            "order": 3
+                        },
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "In Phase-Shift Keying (PSK), how does the receiving station typically determine the bit value of the transmitted data?",
+                            "choices": [
+                                "By sampling the signal during the symbol period, comparing the phase of the current sample with the previous sample, and determining the differential.",
+                                "By measuring the peak height of the wave during the symbol period and comparing it to a predefined voltage threshold.",
+                                "By counting the number of waves generated over a one-second period and calculating the frequency shift.",
+                                "By dividing the wavelength by the amplitude to calculate the phase angle of the carrier signal."
+                            ],
+                            "correctAnswer": "By sampling the signal during the symbol period, comparing the phase of the current sample with the previous sample, and determining the differential.",
+                            "explanation": "In PSK, the receiving station samples the signal during the symbol period, compares the phase of the current sample with the previous sample, and determines the difference (differential). This phase shift is used to determine the bit value.",
+                            "order": 4
+                        },
+                        {
+                            "type": "multiple_choice",
+                            "prompt": "What is the primary advantage of using Multiple Phase-Shift Keying (MPSK) over basic PSK?",
+                            "choices": [
+                                "It allows each phase change to represent multiple bits of data (e.g., 2 bits using four phases), thereby shortening transmission time.",
+                                "It increases the amplitude of the signal, making it more resilient to background RF noise and interference.",
+                                "It enables full-duplex communication on a single RF channel by using orthogonal phase shifts.",
+                                "It eliminates the need for a carrier signal by transmitting digital baseband signals directly over the RF medium."
+                            ],
+                            "correctAnswer": "It allows each phase change to represent multiple bits of data (e.g., 2 bits using four phases), thereby shortening transmission time.",
+                            "explanation": "MPSK uses more than two phases (e.g., four phases). Each of the four phases is capable of representing two binary values (00, 01, 10, or 11) instead of just one (0 or 1), which effectively encodes multiple bits per symbol and shortens transmission time.",
+                            "order": 5
+                        },
+                        {
+                            "type": "free_text",
+                            "prompt": "What term describes the distance between similar points on two back-to-back waves, typically measured from peak to peak?",
+                            "correctAnswer": "Wavelength",
+                            "explanation": "Wavelength is the physical distance between similar points on two consecutive waves, usually measured from the peak of one wave to the peak of the next.",
+                            "order": 6
+                        }
+                    ]
+                }
+            ],
+            "finalAssessment": [
+                {
+                    "type": "multiple_choice",
+                    "prompt": "A Cisco Solutions Engineer is explaining the WLAN standards ecosystem to a client. The client asks why some early 802.11-compliant devices from different vendors historically failed to interoperate. What is the most accurate explanation?",
+                    "choices": [
+                        "Ambiguity in the IEEE framework allowed manufacturers to interpret the 802.11 standard differently, leading to the creation of the Wi-Fi Alliance to enforce interoperability.",
+                        "The FCC mandated different frequency bands for different vendors, causing hardware incompatibilities.",
+                        "The IETF failed to publish the necessary RFCs for MAC layer interoperability in a timely manner.",
+                        "Early 802.11 devices used full-duplex communications, which caused unavoidable collisions in mixed-vendor environments."
+                    ],
+                    "correctAnswer": "Ambiguity in the IEEE framework allowed manufacturers to interpret the 802.11 standard differently, leading to the creation of the Wi-Fi Alliance to enforce interoperability.",
+                    "explanation": "The IEEE 802.11 standard had ambiguities that allowed vendors to interpret it differently, resulting in compliant devices that could not communicate with each other. The WECA (now Wi-Fi Alliance) was formed specifically to define strict interoperability guidelines and test products to ensure they work together.",
+                    "order": 1
+                },
+                {
+                    "type": "multiple_choice",
+                    "prompt": "In a high-density enterprise deployment, an engineer needs to prevent the oversubscription of voice calls on an access point. Which Wi-Fi Alliance certification program utilizes call admission control (CAC) mechanisms to manage network traffic based on channel conditions and load?",
+                    "choices": [
+                        "WMM-Admission Control",
+                        "Voice-Enterprise",
+                        "Wi-Fi Agile Multiband",
+                        "Wi-Fi Optimized Connectivity"
+                    ],
+                    "correctAnswer": "WMM-Admission Control",
+                    "explanation": "WMM-Admission Control (WMM-AC) uses call admission control (CAC) mechanisms to prevent oversubscription of voice calls through an AP. It ensures the AP only allows traffic it can support based on available network resources.",
+                    "order": 2
+                },
+                {
+                    "type": "multiple_select",
+                    "prompt": "When deploying a WLAN in the United States, the Federal Communications Commission (FCC) regulates both licensed and unlicensed communications. Which of the following parameters are typically regulated by the FCC?",
+                    "choices": [
+                        "Maximum equivalent isotropically radiated power (EIRP)",
+                        "Frequency and Bandwidth",
+                        "Indoor and/or outdoor use",
+                        "The specific routing protocols used at the distribution layer"
+                    ],
+                    "correctAnswers": [
+                        "Maximum equivalent isotropically radiated power (EIRP)",
+                        "Frequency and Bandwidth",
+                        "Indoor and/or outdoor use"
+                    ],
+                    "explanation": "The FCC regulates RF transmissions in five main areas: Frequency, Bandwidth, Maximum power of the IR, Maximum EIRP, Use (indoor/outdoor), and Spectrum sharing rules. It does not regulate higher-layer networking protocols like routing.",
+                    "order": 3
+                },
+                {
+                    "type": "multiple_choice",
+                    "prompt": "Which Wi-Fi Alliance certification is based on the Hotspot 2.0 technical specification and is designed to automatically authenticate users to a network using EAP and secure the transmission using WPA2/WPA3-Enterprise?",
+                    "choices": [
+                        "Passpoint",
+                        "Wi-Fi Easy Connect",
+                        "Wi-Fi Protected Setup (WPS)",
+                        "Wi-Fi Vantage"
+                    ],
+                    "correctAnswer": "Passpoint",
+                    "explanation": "Passpoint is based on Hotspot 2.0. It revolutionizes the end-user experience by automatically identifying the hotspot, authenticating via EAP, and securing the connection with WPA2/WPA3-Enterprise.",
+                    "order": 4
+                },
+                {
+                    "type": "multiple_choice",
+                    "prompt": "When discussing modulation techniques, what is the fundamental difference between 'current state' and 'state transition' techniques?",
+                    "choices": [
+                        "Current state uses the specific value of the signal at a given time to determine the binary value, while state transition uses the presence or absence of a change in the signal to determine the binary value.",
+                        "Current state modifies the amplitude of the wave, while state transition modifies the frequency of the wave.",
+                        "Current state is used exclusively in full-duplex communications, while state transition is used in half-duplex communications.",
+                        "Current state requires a licensed frequency band, while state transition is optimized for unlicensed frequency bands."
+                    ],
+                    "correctAnswer": "Current state uses the specific value of the signal at a given time to determine the binary value, while state transition uses the presence or absence of a change in the signal to determine the binary value.",
+                    "explanation": "In current state techniques (like ASK and FSK), the actual value (e.g., high vs. low amplitude) at a specific time represents the bit. In state transition techniques (like some forms of PSK), a change in the signal (e.g., a phase shift) represents a 0, and no change represents a 1.",
+                    "order": 5
+                },
+                {
+                    "type": "free_text",
+                    "prompt": "The Wi-Fi Location certification provides highly accurate indoor location information without needing an overlay infrastructure. It is based on the FTM protocol defined in the 802.11-2016 standard. What does FTM stand for?",
+                    "correctAnswer": "Fine Timing Measurement",
+                    "explanation": "Wi-Fi Location is based on the Fine Timing Measurement (FTM) protocol, which allows devices to calculate highly accurate indoor location data natively via the Wi-Fi network.",
+                    "order": 6
+                },
+                {
+                    "type": "multiple_choice",
+                    "prompt": "An enterprise network is experiencing issues with clients sticking to suboptimal access points. Which Wi-Fi Alliance certification allows APs to make intelligent band and channel selection decisions and helps clients respond to changing network conditions?",
+                    "choices": [
+                        "Wi-Fi Agile Multiband",
+                        "Wi-Fi Data Elements",
+                        "Wi-Fi EasyMesh",
+                        "Tunneled Direct Link Setup (TDLS)"
+                    ],
+                    "correctAnswer": "Wi-Fi Agile Multiband",
+                    "explanation": "Wi-Fi Agile Multiband provides better management of Wi-Fi environments by allowing client devices to exchange information with infrastructure devices. This enables APs to make intelligent band/channel decisions and helps clients roam seamlessly to avoid congestion.",
+                    "order": 7
+                },
+                {
+                    "type": "multiple_select",
+                    "prompt": "The Internet Engineering Task Force (IETF) is one of the main groups that are part of the Internet Society (ISOC). Which of the following are also groups within the ISOC hierarchy?",
+                    "choices": [
+                        "Internet Architecture Board (IAB)",
+                        "Internet Engineering Steering Group (IESG)",
+                        "Internet Research Task Force (IRTF)",
+                        "International Telecommunication Union (ITU)"
+                    ],
+                    "correctAnswers": [
+                        "Internet Architecture Board (IAB)",
+                        "Internet Engineering Steering Group (IESG)",
+                        "Internet Research Task Force (IRTF)"
+                    ],
+                    "explanation": "The ISOC groups include the IETF, IAB, ICANN, IESG, and IRTF. The ITU is a separate entity under the United Nations.",
+                    "order": 8
+                },
+                {
+                    "type": "multiple_choice",
+                    "prompt": "In RF communications, 'phase' is a relative term describing the relationship between two waves with the same frequency. If one wave begins at the 0-degree point and another begins at the 180-degree point, how are these waves described?",
+                    "choices": [
+                        "They are 180 degrees out of phase.",
+                        "They have a frequency shift of 180 Hertz.",
+                        "They are operating in full-duplex mode.",
+                        "They have an amplitude differential of 180."
+                    ],
+                    "correctAnswer": "They are 180 degrees out of phase.",
+                    "explanation": "Phase is measured in degrees (0 to 360). If two waves start at different points in their cycle (e.g., 0 degrees and 180 degrees), they are considered to be 180 degrees out of phase.",
+                    "order": 9
+                },
+                {
+                    "type": "free_text",
+                    "prompt": "Under the Wi-Fi Alliance's generational naming convention, Wi-Fi 6 refers to 802.11ax and Wi-Fi 5 refers to 802.11ac. What IEEE 802.11 amendment does Wi-Fi 4 refer to?",
+                    "correctAnswer": "802.11n",
+                    "explanation": "The Wi-Fi Alliance retroactively applied generational names to older standards. Wi-Fi 4 refers to the 802.11n amendment.",
+                    "order": 10
+                }
+            ]
+        }
+    ]
+}

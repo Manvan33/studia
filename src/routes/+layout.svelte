@@ -11,10 +11,8 @@
 
 	const navItems = [
 		{ href: '/', label: 'Dashboard', icon: '📊' },
-		{ href: '/themes', label: 'Themes', icon: '📚' },
 		{ href: '/history', label: 'History', icon: '📋' },
-		{ href: '/import', label: 'Import', icon: '📥' },
-		{ href: '/manage', label: 'Manage', icon: '⚙️' }
+		{ href: '/content', label: 'Content', icon: '📚' }
 	];
 
 	function isActive(href: string): boolean {

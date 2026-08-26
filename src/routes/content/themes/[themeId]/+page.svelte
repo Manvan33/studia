@@ -158,14 +158,14 @@
 			await db.chapters.bulkDelete(chapterIds);
 			await db.themes.delete(themeId);
 		});
-		goto(`${base}/manage`);
+		goto(`${base}/content`);
 	}
 </script>
 
 {#if theme}
 	<div class="mx-auto max-w-2xl space-y-6">
 		<div>
-			<a href="{base}/manage" class="text-sm text-primary-600 hover:text-primary-700">&larr; Back</a
+			<a href="{base}/content" class="text-sm text-primary-600 hover:text-primary-700">&larr; Back</a
 			>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Theme</h1>
 		</div>
@@ -200,7 +200,7 @@
 						Save Changes
 					</button>
 					<a
-						href="{base}/manage/themes/{themeId}/json"
+						href="{base}/content/themes/{themeId}/json"
 						class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
 					>
 						Edit as JSON
@@ -287,7 +287,7 @@
 							</button>
 							<span class="text-sm font-medium text-gray-400">{i + 1}</span>
 							<a
-								href="{base}/manage/chapters/{chapter.id}"
+								href="{base}/content/chapters/{chapter.id}"
 								class="truncate font-medium text-gray-900 hover:text-primary-700 hover:underline"
 							>
 								{chapter.title}

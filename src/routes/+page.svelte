@@ -119,6 +119,22 @@
 		return questions.filter((question) => chapterIds.has(question.chapterId)).length;
 	}
 
+	function getThemeProgressPercent(themeId: string): number {
+		const chapterIds = new Set(
+			Array.from(chapterMap.values())
+				.filter((chapter) => chapter.themeId === themeId)
+				.map((chapter) => chapter.id)
+		);
+		const themeProgress = stats?.chapterCompletionStatus.filter((chapter) =>
+			chapterIds.has(chapter.chapterId)
+		);
+		const totalQuestions = themeProgress?.reduce((sum, chapter) => sum + chapter.totalQuestions, 0) ?? 0;
+		const answeredQuestions =
+			themeProgress?.reduce((sum, chapter) => sum + chapter.answeredQuestions, 0) ?? 0;
+
+		return totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0;
+	}
+
 	function getProgressBarClass(chapter: ChapterStatus): string {
 		if (chapter.correctRate >= 70) return 'bg-success-500';
 		if (chapter.correctRate >= 40) return 'bg-warning-500';
@@ -148,9 +164,17 @@
 </script>
 
 <div class="space-y-6">
-	<div>
-		<h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-		<p class="mt-1 text-sm text-gray-500">Select a theme to focus your study details</p>
+	<div class="flex flex-wrap items-start justify-between gap-3">
+		<div>
+			<h1 class="text-2xl font-bold text-gray-900">Your study space</h1>
+			<p class="mt-1 text-sm text-gray-500">Pick up where you left off or choose a theme to explore.</p>
+		</div>
+		<a
+			href="{base}/content/import"
+			class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+		>
+			Import content
+		</a>
 	</div>
 
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -177,7 +201,7 @@
 			<p class="text-lg font-medium text-gray-600">No study content yet</p>
 			<p class="mt-1 text-sm text-gray-400">Import a JSON study guide to get started</p>
 			<a
-				href="{base}/import"
+				href="{base}/content/import"
 				class="mt-4 inline-block rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
 			>
 				Import Content
@@ -187,8 +211,11 @@
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
 			<aside class="space-y-4 lg:col-span-4">
 				<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-					<h2 class="text-lg font-semibold text-gray-800">Themes</h2>
-					<p class="mt-1 text-xs text-gray-500">Choose one to inspect details</p>
+					<div class="flex items-center justify-between gap-2">
+						<h2 class="text-lg font-semibold text-gray-800">Your themes</h2>
+						<span class="text-xs text-gray-400">{themes.length} total</span>
+					</div>
+					<p class="mt-1 text-xs text-gray-500">Choose a theme to see its progress and results.</p>
 					<div class="mt-3 space-y-2">
 						{#each themes as theme}
 							<button
@@ -199,11 +226,22 @@
 									? 'border-primary-300 bg-primary-50'
 									: 'border-gray-200 bg-white hover:bg-gray-50'}"
 							>
-								<div class="flex items-center justify-between gap-2">
-									<p class="truncate text-sm font-medium text-gray-900">{theme.title}</p>
-									<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-										{getThemeChapterCount(theme.id)} chapters
+								<div class="flex items-start justify-between gap-2">
+									<div class="min-w-0">
+										<p class="truncate text-sm font-medium text-gray-900">{theme.title}</p>
+										<p class="mt-0.5 text-xs text-gray-500">
+											{getThemeChapterCount(theme.id)} chapters · {getThemeQuestionCount(theme.id)} questions
+										</p>
+									</div>
+									<span class="shrink-0 text-xs font-medium text-primary-700">
+										{getThemeProgressPercent(theme.id)}%
 									</span>
+								</div>
+								<div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+									<div
+										class="h-full rounded-full bg-primary-500 transition-all duration-300"
+										style="width: {getThemeProgressPercent(theme.id)}%"
+									></div>
 								</div>
 							</button>
 						{/each}
@@ -217,12 +255,6 @@
 					>
 						Custom Session
 					</a>
-					<a
-						href="{base}/import"
-						class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-					>
-						Import Content
-					</a>
 				</div>
 			</aside>
 
@@ -235,12 +267,6 @@
 								<p class="mt-1 text-sm text-gray-500">{selectedTheme.description}</p>
 							{/if}
 						</div>
-						<a
-							href="{base}/themes/{selectedTheme.id}"
-							class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-						>
-							Open Theme
-						</a>
 					</div>
 
 					<div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -346,7 +372,10 @@
 					{:else}
 						<div class="space-y-2">
 							{#each selectedThemeChapterProgress as chapter}
-								<div class="rounded-lg border border-gray-200 px-3 py-2">
+								<a
+									href="{base}/themes/{selectedTheme.id}/chapters/{chapter.chapterId}"
+									class="block rounded-lg border border-gray-200 px-3 py-2 transition-colors hover:border-primary-200 hover:bg-primary-50"
+								>
 									<div class="flex items-center justify-between">
 										<p class="text-sm font-medium text-gray-900">{chapter.chapterTitle}</p>
 										<div class="text-right">
@@ -368,7 +397,7 @@
 											></div>
 										</div>
 									{/if}
-								</div>
+								</a>
 							{/each}
 						</div>
 					{/if}

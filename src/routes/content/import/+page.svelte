@@ -234,7 +234,7 @@
 			const rawPreview = $state.snapshot(pastePreview);
 			const chapterTitles = new Set(rawPreview.chapters.map((c) => c.title));
 			const { themeId } = await importData(rawPreview);
-			attachThemeTarget = `${base}/themes/${themeId}`;
+			attachThemeTarget = `${base}/`;
 			await buildAttachRows([themeId], chapterTitles);
 			importing = false;
 			if (attachRows.length === 0) {
@@ -251,7 +251,6 @@
 		importing = true;
 
 		try {
-			let lastThemeId = '';
 			const importedThemeIds = new Set<string>();
 			const chapterTitles = new Set<string>();
 
@@ -259,12 +258,10 @@
 				const rawData = $state.snapshot(entry.data!);
 				for (const c of rawData.chapters) chapterTitles.add(c.title);
 				const { themeId } = await importData(rawData);
-				lastThemeId = themeId;
 				importedThemeIds.add(themeId);
 			}
 
-			attachThemeTarget =
-				importedThemeIds.size === 1 ? `${base}/themes/${lastThemeId}` : `${base}/themes`;
+			attachThemeTarget = `${base}/`;
 			await buildAttachRows([...importedThemeIds], chapterTitles);
 			importing = false;
 			if (attachRows.length === 0) {
@@ -329,6 +326,9 @@
 
 <div class="mx-auto max-w-2xl space-y-6">
 	<div>
+		<a href="{base}/content" class="text-sm text-primary-600 hover:text-primary-700"
+			>&larr; Back to Content</a
+		>
 		<h1 class="text-2xl font-bold text-gray-900">Import Content</h1>
 		<p class="mt-1 text-sm text-gray-500">
 			Paste raw JSON or full LLM output containing a JSON code block

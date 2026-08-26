@@ -209,11 +209,15 @@
 			currentIndex = questions.length;
 			return;
 		}
+		sourceViewer.close();
+		showExplanation = false;
 		navigateToQuestion(currentIndex + 1);
 	}
 
 	function goToPrevious() {
 		if (currentIndex <= 0) return;
+		sourceViewer.close();
+		showExplanation = false;
 		navigateToQuestion(currentIndex - 1);
 	}
 
@@ -290,6 +294,15 @@
 				} else if (currentQuestion?.type === 'multiple_select') {
 					toggleChoice(shuffledChoices[index]);
 				}
+			}
+			return;
+		}
+
+		if (event.key === 'Escape') {
+			if (showExplanation) {
+				event.preventDefault();
+				sourceViewer.close();
+				showExplanation = false;
 			}
 			return;
 		}
@@ -625,7 +638,7 @@
 								onclick={goToPrevious}
 								class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
 							>
-								← Previous <span class="text-xs text-gray-400">(←)</span>
+								← Previous <span class="text-xs text-gray-400">←</span>
 							</button>
 						{/if}
 						{#if currentQuestion.sourceRef}
@@ -634,7 +647,7 @@
 								class="rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2.5 text-sm font-medium text-yellow-800 hover:bg-yellow-100"
 								title="Open study guide"
 							>
-								📖 Study guide <span class="text-xs opacity-75">(E)</span>
+							📖 Study guide <span class="text-xs opacity-75">E</span>
 							</button>
 						{/if}
 					</div>
@@ -646,14 +659,7 @@
 								: !userAnswer.trim()) || submitting}
 							class="max-w-xs flex-1 rounded-lg bg-primary-600 px-4 py-2.5 font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
 						>
-							Submit Answer <span class="text-xs opacity-75">(Enter ↵)</span>
-						</button>
-						<button
-							onclick={handleSkip}
-							disabled={submitting}
-							class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
-						>
-							Skip
+							Submit Answer <span class="text-xs opacity-75">↵</span>
 						</button>
 					</div>
 					{#if canGoNext}
@@ -894,7 +900,7 @@
 									class="text-xs font-medium text-blue-700 hover:underline"
 									title="Press E to open study guide"
 								>
-									Open Study guide <span class="opacity-75">(E)</span>
+									Open Study guide <span class="opacity-75">E</span>
 								</button>
 							{/if}
 						</div>
@@ -960,7 +966,7 @@
 								onclick={goToPrevious}
 								class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
 							>
-								← Previous <span class="text-xs text-gray-400">(←)</span>
+								← Previous <span class="text-xs text-gray-400">←</span>
 							</button>
 						{/if}
 						<button
@@ -968,7 +974,7 @@
 							class="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700"
 						>
 							{currentIndex + 1 >= questions.length ? 'Finish' : 'Next Question'}
-							<span class="text-xs opacity-75">(Enter ↵ / →)</span>
+							<span class="text-xs opacity-75">↵ / →</span>
 						</button>
 					</div>
 				</div>

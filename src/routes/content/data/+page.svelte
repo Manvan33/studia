@@ -1,4 +1,6 @@
 <script lang="ts">
+	let { embedded = false } = $props();
+
 	import { base } from '$app/paths';
 	import { db } from '$lib/db';
 	import { exportDatabase, validateDatabaseBackup, importDatabase } from '$lib/import';
@@ -145,13 +147,15 @@
 <svelte:window on:dragover|preventDefault on:drop|preventDefault />
 
 <div class="mx-auto max-w-2xl space-y-8">
-	<div>
+	{#if !embedded}
+		<div>
 		<div class="flex items-center gap-2">
-			<a href="{base}/manage" class="text-sm text-gray-500 hover:text-gray-700">&larr; Manage</a>
+			<a href="{base}/content" class="text-sm text-gray-500 hover:text-gray-700">&larr; Content</a>
 		</div>
 		<h1 class="mt-2 text-2xl font-bold text-gray-900">Database Backup</h1>
 		<p class="mt-1 text-sm text-gray-500">Export or restore your entire Studia database</p>
-	</div>
+		</div>
+	{/if}
 
 	<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 		<h2 class="text-lg font-semibold text-gray-900">Export</h2>

@@ -18,7 +18,7 @@
 	<div class="flex items-center justify-between">
 		<h1 class="text-2xl font-bold text-gray-900">Learning Themes</h1>
 		<a
-			href="{base}/import"
+			href="{base}/content/import"
 			class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
 		>
 			Import New

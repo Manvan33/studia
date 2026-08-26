@@ -119,7 +119,7 @@
 			await db.questions.where('topicId').equals(topicId).delete();
 			await db.topics.delete(topicId);
 		});
-		goto(`${base}/manage/chapters/${topic.chapterId}`);
+		goto(`${base}/content/chapters/${topic.chapterId}`);
 	}
 </script>
 
@@ -127,7 +127,7 @@
 	<div class="mx-auto max-w-2xl space-y-6">
 		<div>
 			<a
-				href="{base}/manage/chapters/{topic.chapterId}"
+				href="{base}/content/chapters/{topic.chapterId}"
 				class="text-sm text-primary-600 hover:text-primary-700">&larr; Back to Chapter</a
 			>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Topic</h1>

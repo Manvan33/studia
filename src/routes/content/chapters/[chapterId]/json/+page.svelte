@@ -86,7 +86,7 @@
 		try {
 			const rawPreview = $state.snapshot(preview);
 			await updateChapterFromJson(chapterId, rawPreview);
-			goto(`${base}/manage/chapters/${chapterId}`);
+			goto(`${base}/content/chapters/${chapterId}`);
 		} catch (e: unknown) {
 			parseError = e instanceof Error ? e.message : 'Update failed';
 			saving = false;
@@ -123,7 +123,7 @@
 <div class="mx-auto max-w-3xl space-y-6">
 	<div>
 		<a
-			href="{base}/manage/chapters/{chapterId}"
+			href="{base}/content/chapters/{chapterId}"
 			class="text-sm text-primary-600 hover:text-primary-700">&larr; Back to Chapter</a
 		>
 		<h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Chapter JSON</h1>
