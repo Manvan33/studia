@@ -242,7 +242,7 @@ function computeChapterCompletion(
 			const chapterQuestions = questions.filter((q) => q.chapterId === chapter.id);
 			const answered = chapterQuestions.filter((q) => progressMap.has(q.id));
 			const correctCount = answered.reduce(
-				(sum, q) => sum + ((progressMap.get(q.id)?.timesCorrect ?? 0 > 0) ? 1 : 0),
+				(sum, q) => sum + ((progressMap.get(q.id)?.timesCorrect ?? 0) > 0 ? 1 : 0),
 				0
 			);
 
