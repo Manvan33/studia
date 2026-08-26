@@ -1,0 +1,35 @@
+
+> studia-app@0.0.1 dev
+> vite dev --port 5199
+
+
+  VITE v7.3.2  ready in 1726 ms
+
+  ➜  Local:   http://localhost:5199/
+  ➜  Network: use --host to expose
+2:03:02 PM [vite] (client) hmr update /src/routes/layout.css, /src/routes/import/+page.svelte
+2:03:02 PM [vite] (client) hmr update /src/routes/+page.svelte, /src/routes/layout.css
+2:03:02 PM [vite] (client) page reload test/c05.html
+2:03:02 PM [vite] (client) hmr update /src/routes/+page.svelte, /src/routes/layout.css
+2:03:02 PM [vite] (client) hmr update /src/routes/layout.css
+2:03:02 PM [vite] (client) hmr update /src/routes/import/+page.svelte, /src/routes/layout.css
+2:03:50 PM [vite] (client) page reload test/c05.html
+age/themes/[themeId]/+page.svelte, /src/routes/layout.css
+2:03:02 PM [vite] (client) hmr update /src/routes/themes/[themeId]/+page.svelte, /src/routes/layout.css
+2:03:02 PM [vite] (client) hmr update /src/routes/themes/[themeId]/chapters/[chapterId]/+page.svelte, /src/routes/layout.css
+2:03:02 PM [vite] (client) hmr update /src/lib/components/SourcePanel.svelte, /src/routes/layout.css
+2:03:02 PM [vite] (client) hmr update /src/lib/components/SourceQuote.svelte, /src/routes/layout.css
+2:03:02 PM [vite] (client) hmr update /src/routes/+layout.svelte, /src/routes/layout.css
+2:03:24 PM [vite] (client) hmr update /src/routes/layout.css, /src/routes/import/+page.svelte
+2:03:48 PM [vite] (client) hmr update /src/lib/components/SourcePanel.svelte, /src/routes/layout.css
+2:03:48 PM [vite] (client) hmr update /src/lib/components/SourceQuote.svelte, /src/routes/layout.css
+2:03:48 PM [vite] (client) hmr update /src/routes/layout.css, /src/routes/import/+page.svelte
+2:03:48 PM [vite] (client) hmr update /src/routes/+page.svelte, /src/routes/layout.css
+2:03:49 PM [vite] (client) hmr update /src/routes/+layout.svelte, /src/routes/layout.css
+2:03:49 PM [vite] (client) hmr update /src/routes/+page.svelte, /src/routes/layout.css
+2:03:49 PM [vite] (client) hmr update /src/routes/layout.css
+2:03:49 PM [vite] (client) hmr update /src/routes/import/+page.svelte, /src/routes/layout.css
+2:03:49 PM [vite] (client) hmr update /src/routes/manage/themes/[themeId]/+page.svelte, /src/routes/layout.css
+2:03:50 PM [vite] (client) hmr update /src/routes/themes/[themeId]/+page.svelte, /src/routes/layout.css
+2:03:50 PM [vite] (client) hmr update /src/routes/themes/[themeId]/chapters/[chapterId]/+page.svelte, /src/routes/layout.css
+2:03:50 PM [vite] (client) page reload test/c05.html
