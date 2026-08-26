@@ -38,3 +38,15 @@ const rawPreview = $state.snapshot(preview);
 const { themeId } = await importData(rawPreview);
 ```
 For simpler cases (e.g., a `$state` array being passed to `db.add()`), spreading the array (`[...proxyArray]`) also works. This applies anywhere `$state` data flows into IndexedDB write operations.
+
+## Efficient Sorting with Related Data
+
+**Problem**: Sorting a large list of objects (e.g., Questions) based on a property of a related object (e.g., Topic order) can become $O(N \cdot M)$ if the lookup is performed inside the sort comparator using `.find()` or a database query.
+
+**Solution**: Pre-map the related data into a `Map` or lookup object before starting the sort. This reduces the lookup time to $O(1)$ on average, bringing the total sorting complexity down to $O(N \log N + M)$, where $N$ is the number of items to sort and $M$ is the number of related items.
+
+## Eliminating N+1 Queries in IndexedDB
+
+**Problem**: Performing database queries inside a loop (N+1 query problem) is a common performance bottleneck, especially in client-side databases like IndexedDB where each query has overhead.
+
+**Solution**: Use bulk fetching methods like Dexie's `.anyOf()` to retrieve all required data in a single query outside the loop. Use in-memory grouping (e.g., a `Map<chapterId, items[]>`) to provide efficient access to the pre-fetched data within the loop.

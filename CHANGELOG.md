@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Optimized
+
+- `createCustomSession` performance: eliminated N+1 database queries by pre-fetching all topics and questions for involved chapters in bulk using Dexie's `.anyOf()`.
+- Question sorting: replaced $O(M \cdot T)$ nested lookup in sort comparator with $O(M \log M + T)$ using a pre-computed Topic order Map.
+
 ### Added
 
 - GitHub Pages deployment workflow via GitHub Actions (`.github/workflows/deploy-pages.yml`) that builds and deploys static output from `build/`

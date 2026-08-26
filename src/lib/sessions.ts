@@ -71,37 +71,47 @@ export async function createCustomSession(opts: {
 
 	const themeIds = [...new Set(validChapters.map((c) => c.themeId))];
 
+	const allTopics = await db.topics.where('chapterId').anyOf(opts.chapterIds).toArray();
+	const topicsByChapter = new Map<string, Topic[]>();
+	const topicOrderMap = new Map<string, number>();
+	for (const t of allTopics) {
+		const list = topicsByChapter.get(t.chapterId) ?? [];
+		list.push(t);
+		topicsByChapter.set(t.chapterId, list);
+		topicOrderMap.set(t.id, t.order);
+	}
+
+	const allQuestions = await db.questions.where('chapterId').anyOf(opts.chapterIds).toArray();
+	const questionsByChapter = new Map<string, Question[]>();
+	for (const q of allQuestions) {
+		const list = questionsByChapter.get(q.chapterId) ?? [];
+		list.push(q);
+		questionsByChapter.set(q.chapterId, list);
+	}
+
 	let questions: Question[] = [];
 
 	for (const chapter of validChapters) {
-		const topics = await db.topics.where('chapterId').equals(chapter.id).sortBy('order');
+		const chapterAllQuestions = questionsByChapter.get(chapter.id) ?? [];
 
 		let chapterQuestions: Question[];
 		if (opts.finalAssessmentOnly) {
-			chapterQuestions = await db.questions
-				.where('chapterId')
-				.equals(chapter.id)
-				.and((q) => q.isFinalAssessment)
-				.sortBy('order');
+			chapterQuestions = chapterAllQuestions
+				.filter((q) => q.isFinalAssessment)
+				.sort((a, b) => a.order - b.order);
 		} else {
-			const topicQuestions = await db.questions
-				.where('chapterId')
-				.equals(chapter.id)
-				.and((q) => !q.isFinalAssessment)
-				.sortBy('order');
+			const topicQuestions = chapterAllQuestions.filter((q) => !q.isFinalAssessment);
 
 			const sorted = topicQuestions.sort((a, b) => {
-				const topicOrderA = topics.find((t) => t.id === a.topicId)?.order ?? 0;
-				const topicOrderB = topics.find((t) => t.id === b.topicId)?.order ?? 0;
+				const topicOrderA = a.topicId ? (topicOrderMap.get(a.topicId) ?? 0) : 0;
+				const topicOrderB = b.topicId ? (topicOrderMap.get(b.topicId) ?? 0) : 0;
 				if (topicOrderA !== topicOrderB) return topicOrderA - topicOrderB;
 				return a.order - b.order;
 			});
 
-			const finalQuestions = await db.questions
-				.where('chapterId')
-				.equals(chapter.id)
-				.and((q) => q.isFinalAssessment)
-				.sortBy('order');
+			const finalQuestions = chapterAllQuestions
+				.filter((q) => q.isFinalAssessment)
+				.sort((a, b) => a.order - b.order);
 
 			chapterQuestions = [...sorted, ...finalQuestions];
 		}
