@@ -107,6 +107,16 @@ function computeWeakTopics(
 	questions: Question[],
 	topics: Topic[]
 ): WeakItem[] {
+	const questionMap = new Map<string, Question>();
+	for (const q of questions) {
+		questionMap.set(q.id, q);
+	}
+
+	const topicMap = new Map<string, Topic>();
+	for (const t of topics) {
+		topicMap.set(t.id, t);
+	}
+
 	const topicStats = new Map<string, { correct: number; total: number }>();
 	const questionMap = new Map<string, Question>(questions.map((q) => [q.id, q]));
 	const topicMap = new Map<string, Topic>(topics.map((t) => [t.id, t]));
@@ -142,6 +152,16 @@ function computeWeakChapters(
 	questions: Question[],
 	chapters: Chapter[]
 ): WeakItem[] {
+	const questionMap = new Map<string, Question>();
+	for (const q of questions) {
+		questionMap.set(q.id, q);
+	}
+
+	const chapterMap = new Map<string, Chapter>();
+	for (const c of chapters) {
+		chapterMap.set(c.id, c);
+	}
+
 	const chapterStats = new Map<string, { correct: number; total: number }>();
 	const questionMap = new Map<string, Question>(questions.map((q) => [q.id, q]));
 	const chapterMap = new Map<string, Chapter>(chapters.map((c) => [c.id, c]));
@@ -178,9 +198,20 @@ function computeFrequentlyMissed(
 	topics: Topic[],
 	chapters: Chapter[]
 ): MissedQuestion[] {
-	const questionMap = new Map<string, Question>(questions.map((q) => [q.id, q]));
-	const topicMap = new Map<string, Topic>(topics.map((t) => [t.id, t]));
-	const chapterMap = new Map<string, Chapter>(chapters.map((c) => [c.id, c]));
+	const questionMap = new Map<string, Question>();
+	for (const q of questions) {
+		questionMap.set(q.id, q);
+	}
+
+	const topicMap = new Map<string, Topic>();
+	for (const t of topics) {
+		topicMap.set(t.id, t);
+	}
+
+	const chapterMap = new Map<string, Chapter>();
+	for (const c of chapters) {
+		chapterMap.set(c.id, c);
+	}
 
 	return progress
 		.filter((p) => p.timesIncorrect >= 2)
@@ -215,7 +246,7 @@ function computeChapterCompletion(
 			const chapterQuestions = questions.filter((q) => q.chapterId === chapter.id);
 			const answered = chapterQuestions.filter((q) => progressMap.has(q.id));
 			const correctCount = answered.reduce(
-				(sum, q) => sum + ((progressMap.get(q.id)?.timesCorrect ?? 0 > 0) ? 1 : 0),
+				(sum, q) => sum + ((progressMap.get(q.id)?.timesCorrect ?? 0) > 0 ? 1 : 0),
 				0
 			);
 

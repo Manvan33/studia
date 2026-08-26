@@ -3,7 +3,12 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { db } from '$lib/db';
-	import { exportChapterAsJson, validateChapterData, updateChapterFromJson, extractJson } from '$lib/import';
+	import {
+		exportChapterAsJson,
+		validateChapterData,
+		updateChapterFromJson,
+		extractJson
+	} from '$lib/import';
 	import type { ImportChapter, ValidationError } from '$lib/types';
 
 	const chapterId = $derived(page.params.chapterId ?? '');
@@ -60,7 +65,8 @@
 		try {
 			parsed = JSON.parse(extracted);
 		} catch {
-			parseError = 'Invalid JSON syntax. Paste raw JSON or LLM output containing a ```json code block.';
+			parseError =
+				'Invalid JSON syntax. Paste raw JSON or LLM output containing a ```json code block.';
 			return;
 		}
 
@@ -116,7 +122,10 @@
 
 <div class="mx-auto max-w-3xl space-y-6">
 	<div>
-		<a href="{base}/manage/chapters/{chapterId}" class="text-sm text-primary-600 hover:text-primary-700">&larr; Back to Chapter</a>
+		<a
+			href="{base}/manage/chapters/{chapterId}"
+			class="text-sm text-primary-600 hover:text-primary-700">&larr; Back to Chapter</a
+		>
 		<h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Chapter JSON</h1>
 		{#if chapterTitle}
 			<p class="mt-1 text-sm text-gray-500">{chapterTitle}</p>
@@ -173,7 +182,9 @@
 	{:else}
 		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 			<h2 class="text-lg font-semibold text-gray-900">Update Preview</h2>
-			<p class="mt-1 text-sm text-amber-600">This will replace all topics and questions in this chapter.</p>
+			<p class="mt-1 text-sm text-amber-600">
+				This will replace all topics and questions in this chapter.
+			</p>
 
 			<div class="mt-4 space-y-3">
 				<div class="flex justify-between border-b border-gray-100 pb-2">

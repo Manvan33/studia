@@ -166,9 +166,8 @@
 							onclick={() => startRename(doc)}
 							class="text-xs text-gray-500 hover:text-gray-700">Rename</button
 						>
-						<button
-							onclick={() => remove(doc)}
-							class="text-xs text-red-600 hover:text-red-700">Delete</button
+						<button onclick={() => remove(doc)} class="text-xs text-red-600 hover:text-red-700"
+							>Delete</button
 						>
 					{/if}
 				</li>
