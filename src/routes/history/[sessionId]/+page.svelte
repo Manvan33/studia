@@ -240,16 +240,6 @@
 							</p>
 						</div>
 					{/if}
-					{#if topics.length > 0}
-						<div class="min-w-[120px] border-l border-gray-200 pl-4">
-							<span class="text-xs font-semibold tracking-wider text-gray-400 uppercase"
-								>Topics</span
-							>
-							<p class="text-sm font-semibold text-gray-900">
-								{topics.map((t) => t.title).join(', ')}
-							</p>
-						</div>
-					{/if}
 				</div>
 			{/if}
 		</div>
