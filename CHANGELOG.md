@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - History session links missing base path prefix, causing bad redirection on deployments with a base path (e.g., `/studia`).
+### Removed
+
+- Commented out boilerplate interfaces in `src/app.d.ts` for better readability.
 
 ### Added
 
@@ -25,6 +28,7 @@ All notable changes to this project will be documented in this file.
 
 - GitHub Pages deployment workflow via GitHub Actions (`.github/workflows/deploy-pages.yml`) that builds and deploys static output from `build/`
 - Full database export/import: backup and restore all data via Manage → Database Backup (`/manage/data`)
+- Refactor `validateImportData` to use early returns by extracting a `validateTheme` helper, reducing nesting and simplifying control flow.
 - Export toggle to include or exclude study sessions (history, answers, per-question progress)
 - Import supports replace (clear existing) or merge mode
 - Backup file validation before import with error reporting
@@ -156,3 +160,9 @@ All notable changes to this project will be documented in this file.
 ### Added (Testing)
 
 - End-to-end test suite (`e2e-test.mjs`) using Playwright with 42 tests covering: empty states, import flow, theme/chapter navigation, study session (MCQ + free text + final assessment), session completion, history, dashboard stats, custom session setup, content management, and mobile responsiveness
+
+## [0.0.2] - 2024-XX-XX
+
+### Changed
+
+- `src/lib/progress.ts`: Optimized `computeWeakTopics`, `computeWeakChapters`, `computeFrequentlyMissed`, and `computeFinalAssessmentPerformance` by replacing O(N) array `.find()` calls with O(1) `Map` and `Set` lookups. This significantly improved the performance of `getProgressStats()`.
