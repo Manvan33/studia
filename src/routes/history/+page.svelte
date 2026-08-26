@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { db } from '$lib/db';
 	import type { StudySession, LearningTheme, Chapter } from '$lib/types';
 	import { liveQuery } from 'dexie';
@@ -76,7 +77,9 @@
 		<div class="space-y-3">
 			{#each sessions as session}
 				<a
-					href={session.completedAt ? `/history/${session.id}` : `/study/${session.id}`}
+					href={session.completedAt
+						? `${base}/history/${session.id}`
+						: `${base}/study/${session.id}`}
 					class="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
 				>
 					<div class="flex items-center justify-between">

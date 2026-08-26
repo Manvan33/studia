@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- History session links missing base path prefix, causing bad redirection on deployments with a base path (e.g., `/studia`).
+
 ### Added
 
 - **Source references for correct answers**: every question can carry a `sourceRef` with a verbatim quote from the original study guide and an optional locator (`page`, `section`, `anchor`). Displayed under the explanation in study and history views.
