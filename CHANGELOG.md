@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Removed
+
+- Commented out boilerplate interfaces in `src/app.d.ts` for better readability.
+
 ### Added
 
 - **Source references for correct answers**: every question can carry a `sourceRef` with a verbatim quote from the original study guide and an optional locator (`page`, `section`, `anchor`). Displayed under the explanation in study and history views.
