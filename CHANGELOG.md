@@ -157,3 +157,9 @@ All notable changes to this project will be documented in this file.
 ### Added (Testing)
 
 - End-to-end test suite (`e2e-test.mjs`) using Playwright with 42 tests covering: empty states, import flow, theme/chapter navigation, study session (MCQ + free text + final assessment), session completion, history, dashboard stats, custom session setup, content management, and mobile responsiveness
+
+## [0.0.2] - 2024-XX-XX
+
+### Changed
+
+- `src/lib/progress.ts`: Optimized `computeWeakTopics`, `computeWeakChapters`, `computeFrequentlyMissed`, and `computeFinalAssessmentPerformance` by replacing O(N) array `.find()` calls with O(1) `Map` and `Set` lookups. This significantly improved the performance of `getProgressStats()`.
