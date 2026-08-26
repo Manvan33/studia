@@ -24,9 +24,7 @@
 				next: (v) => (topics = v)
 			}
 		);
-		const sub3 = liveQuery(() =>
-			db.questions.where('chapterId').equals(id).toArray()
-		).subscribe({
+		const sub3 = liveQuery(() => db.questions.where('chapterId').equals(id).toArray()).subscribe({
 			next: (v) => (questions = v)
 		});
 		return () => {
@@ -80,8 +78,12 @@
 				<h2 class="mb-3 text-lg font-semibold text-gray-800">Topics</h2>
 				<div class="space-y-2">
 					{#each topics as topic, i}
-						{@const count = questions.filter((q) => q.topicId === topic.id && !q.isFinalAssessment).length}
-						<div class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
+						{@const count = questions.filter(
+							(q) => q.topicId === topic.id && !q.isFinalAssessment
+						).length}
+						<div
+							class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3"
+						>
 							<div class="flex items-center gap-3">
 								<span class="text-sm font-medium text-gray-400">{i + 1}</span>
 								<span class="font-medium text-gray-900">{topic.title}</span>

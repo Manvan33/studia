@@ -1,4 +1,4 @@
-## Guidelines 
+## Guidelines
 
 - If coding in python, use `uv` to manage dependencies and run scripts.
 - Create regular commits for each feature or fix, and provide clear commit messages.

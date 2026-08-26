@@ -67,7 +67,8 @@ export async function getProgressStats(): Promise<ProgressStats> {
 		.map((s) => s.scoring?.scorePercentage)
 		.filter((s): s is number => s !== undefined);
 
-	const averageScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+	const averageScore =
+		scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
 	const recentSessions = completedSessions
 		.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -75,7 +76,12 @@ export async function getProgressStats(): Promise<ProgressStats> {
 
 	const weakTopics = computeWeakTopics(allProgress, allQuestions, allTopics);
 	const weakChapters = computeWeakChapters(allProgress, allQuestions, allChapters);
-	const frequentlyMissed = computeFrequentlyMissed(allProgress, allQuestions, allTopics, allChapters);
+	const frequentlyMissed = computeFrequentlyMissed(
+		allProgress,
+		allQuestions,
+		allTopics,
+		allChapters
+	);
 	const chapterCompletionStatus = computeChapterCompletion(allQuestions, allChapters, allProgress);
 	const finalAssessmentPerformance = computeFinalAssessmentPerformance(
 		allQuestions,
@@ -101,10 +107,20 @@ function computeWeakTopics(
 	questions: Question[],
 	topics: Topic[]
 ): WeakItem[] {
+	const questionMap = new Map<string, Question>();
+	for (const q of questions) {
+		questionMap.set(q.id, q);
+	}
+
+	const topicMap = new Map<string, Topic>();
+	for (const t of topics) {
+		topicMap.set(t.id, t);
+	}
+
 	const topicStats = new Map<string, { correct: number; total: number }>();
 
 	for (const p of progress) {
-		const q = questions.find((q) => q.id === p.questionId);
+		const q = questionMap.get(p.questionId);
 		if (!q?.topicId) continue;
 
 		const existing = topicStats.get(q.topicId) ?? { correct: 0, total: 0 };
@@ -115,7 +131,7 @@ function computeWeakTopics(
 
 	return Array.from(topicStats.entries())
 		.map(([topicId, stats]) => {
-			const topic = topics.find((t) => t.id === topicId);
+			const topic = topicMap.get(topicId);
 			return {
 				id: topicId,
 				title: topic?.title ?? 'Unknown',
@@ -134,10 +150,20 @@ function computeWeakChapters(
 	questions: Question[],
 	chapters: Chapter[]
 ): WeakItem[] {
+	const questionMap = new Map<string, Question>();
+	for (const q of questions) {
+		questionMap.set(q.id, q);
+	}
+
+	const chapterMap = new Map<string, Chapter>();
+	for (const c of chapters) {
+		chapterMap.set(c.id, c);
+	}
+
 	const chapterStats = new Map<string, { correct: number; total: number }>();
 
 	for (const p of progress) {
-		const q = questions.find((q) => q.id === p.questionId);
+		const q = questionMap.get(p.questionId);
 		if (!q) continue;
 
 		const existing = chapterStats.get(q.chapterId) ?? { correct: 0, total: 0 };
@@ -148,7 +174,7 @@ function computeWeakChapters(
 
 	return Array.from(chapterStats.entries())
 		.map(([chapterId, stats]) => {
-			const chapter = chapters.find((c) => c.id === chapterId);
+			const chapter = chapterMap.get(chapterId);
 			return {
 				id: chapterId,
 				title: chapter?.title ?? 'Unknown',
@@ -168,14 +194,29 @@ function computeFrequentlyMissed(
 	topics: Topic[],
 	chapters: Chapter[]
 ): MissedQuestion[] {
+	const questionMap = new Map<string, Question>();
+	for (const q of questions) {
+		questionMap.set(q.id, q);
+	}
+
+	const topicMap = new Map<string, Topic>();
+	for (const t of topics) {
+		topicMap.set(t.id, t);
+	}
+
+	const chapterMap = new Map<string, Chapter>();
+	for (const c of chapters) {
+		chapterMap.set(c.id, c);
+	}
+
 	return progress
 		.filter((p) => p.timesIncorrect >= 2)
 		.sort((a, b) => b.timesIncorrect - a.timesIncorrect)
 		.slice(0, 10)
 		.map((p) => {
-			const q = questions.find((q) => q.id === p.questionId);
-			const topic = q?.topicId ? topics.find((t) => t.id === q.topicId) : undefined;
-			const chapter = q ? chapters.find((c) => c.id === q.chapterId) : undefined;
+			const q = questionMap.get(p.questionId);
+			const topic = q?.topicId ? topicMap.get(q.topicId) : undefined;
+			const chapter = q ? chapterMap.get(q.chapterId) : undefined;
 
 			return {
 				questionId: p.questionId,
@@ -201,7 +242,7 @@ function computeChapterCompletion(
 			const chapterQuestions = questions.filter((q) => q.chapterId === chapter.id);
 			const answered = chapterQuestions.filter((q) => progressMap.has(q.id));
 			const correctCount = answered.reduce(
-				(sum, q) => sum + (progressMap.get(q.id)?.timesCorrect ?? 0 > 0 ? 1 : 0),
+				(sum, q) => sum + ((progressMap.get(q.id)?.timesCorrect ?? 0 > 0) ? 1 : 0),
 				0
 			);
 
@@ -210,8 +251,7 @@ function computeChapterCompletion(
 				chapterTitle: chapter.title,
 				totalQuestions: chapterQuestions.length,
 				answeredQuestions: answered.length,
-				correctRate:
-					answered.length > 0 ? Math.round((correctCount / answered.length) * 100) : 0,
+				correctRate: answered.length > 0 ? Math.round((correctCount / answered.length) * 100) : 0,
 				hasBeenStudied: answered.length > 0
 			};
 		});

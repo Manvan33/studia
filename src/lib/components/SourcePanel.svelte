@@ -1,11 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { sourceViewer, type SourceViewerRequest } from '$lib/sourceViewer';
-	import {
-		listSourceDocuments,
-		getSourceDocument,
-		normaliseForQuoteMatch
-	} from '$lib/sources';
+	import { listSourceDocuments, getSourceDocument, normaliseForQuoteMatch } from '$lib/sources';
 	import type { SourceDocument } from '$lib/types';
 
 	let request = $state<SourceViewerRequest | null>(null);
@@ -291,9 +287,7 @@
 				}
 
 				const textContent = await page.getTextContent();
-				const pageText = textContent.items
-					.map((it) => ('str' in it ? it.str : ''))
-					.join(' ');
+				const pageText = textContent.items.map((it) => ('str' in it ? it.str : '')).join(' ');
 
 				if (targetPage === pageNum) {
 					scrollTarget = pageDiv;

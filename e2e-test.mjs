@@ -304,7 +304,11 @@ async function run() {
 
 	await test('Override buttons shown for free text', async () => {
 		const body = await page.textContent('body');
-		if (!body.includes('Override result') && !body.includes('Mark Correct') && !body.includes('Mark Incorrect')) {
+		if (
+			!body.includes('Override result') &&
+			!body.includes('Mark Correct') &&
+			!body.includes('Mark Incorrect')
+		) {
 			throw new Error('Override buttons not shown');
 		}
 	});
@@ -315,7 +319,8 @@ async function run() {
 		await settle();
 		const body = await page.textContent('body');
 		if (!body.includes('Final Assessment')) throw new Error('Final assessment badge not shown');
-		if (!body.includes('Final: What is 3+3?')) throw new Error('Final assessment question not shown');
+		if (!body.includes('Final: What is 3+3?'))
+			throw new Error('Final assessment question not shown');
 	});
 
 	await test('Final assessment card has amber styling', async () => {
@@ -369,7 +374,8 @@ async function run() {
 		await settle();
 		const body = await page.textContent('body');
 		if (body.includes('No sessions yet')) throw new Error('Session not in history');
-		if (!body.includes('Chapter')) throw new Error('Session type badge not shown (expected "Chapter")');
+		if (!body.includes('Chapter'))
+			throw new Error('Session type badge not shown (expected "Chapter")');
 	});
 
 	await test('History detail shows icons for correct/incorrect', async () => {
@@ -383,12 +389,14 @@ async function run() {
 		}
 		// Check SVG icons exist for result indicators
 		const svgIcons = await page.$$('svg');
-		if (svgIcons.length < 3) throw new Error(`Expected ≥3 SVG icons for accessibility, found ${svgIcons.length}`);
+		if (svgIcons.length < 3)
+			throw new Error(`Expected ≥3 SVG icons for accessibility, found ${svgIcons.length}`);
 	});
 
 	await test('History detail shows final assessment badge', async () => {
 		const body = await page.textContent('body');
-		if (!body.includes('Final')) throw new Error('Final assessment badge not shown in history detail');
+		if (!body.includes('Final'))
+			throw new Error('Final assessment badge not shown in history detail');
 	});
 
 	// =========================================================
