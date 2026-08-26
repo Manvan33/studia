@@ -7,13 +7,23 @@
 	import { renderMarkdown } from '$lib/markdown';
 	import { sourceViewer } from '$lib/sourceViewer';
 	import SourceQuote from '$lib/components/SourceQuote.svelte';
-	import type { StudySession, Question, SessionAnswer } from '$lib/types';
+	import type {
+		StudySession,
+		Question,
+		SessionAnswer,
+		LearningTheme,
+		Chapter,
+		Topic
+	} from '$lib/types';
 
 	const sessionId = $derived(page.params.sessionId ?? '');
 
 	let session = $state<StudySession | undefined>();
 	let questions = $state<Question[]>([]);
 	let answers = $state<SessionAnswer[]>([]);
+	let themeMap = $state<Map<string, LearningTheme>>(new Map());
+	let chapterMap = $state<Map<string, Chapter>>(new Map());
+	let topicMap = $state<Map<string, Topic>>(new Map());
 	let currentIndex = $state(0);
 	let furthestIndex = $state(0);
 	let userAnswer = $state('');
@@ -43,6 +53,21 @@
 		const qs = await db.questions.bulkGet(s.questionIds);
 		questions = qs.filter((q): q is Question => q !== undefined);
 
+		const chapterIds = [...new Set(questions.map((q) => q.chapterId))];
+		const chs = await db.chapters.bulkGet(chapterIds);
+		const validChapters = chs.filter((c): c is Chapter => c !== undefined);
+		chapterMap = new Map(validChapters.map((c) => [c.id, c]));
+
+		const themeIds = [...new Set([...s.themeIds, ...validChapters.map((c) => c.themeId)])];
+		const ths = await db.themes.bulkGet(themeIds);
+		const validThemes = ths.filter((t): t is LearningTheme => t !== undefined);
+		themeMap = new Map(validThemes.map((t) => [t.id, t]));
+
+		const topicIds = [...new Set(questions.map((q) => q.topicId).filter(Boolean))] as string[];
+		const ts = await db.topics.bulkGet(topicIds);
+		const validTopics = ts.filter((t): t is Topic => t !== undefined);
+		topicMap = new Map(validTopics.map((t) => [t.id, t]));
+
 		const existingAnswers = await db.sessionAnswers.where('sessionId').equals(sessionId).toArray();
 		answers = existingAnswers;
 
@@ -71,10 +96,45 @@
 
 	const currentQuestion = $derived(questions[currentIndex]);
 	const isComplete = $derived(currentIndex >= questions.length);
-	const isReviewingPast = $derived(currentIndex < furthestIndex);
 	const canGoPrevious = $derived(currentIndex > 0);
+	const canGoNext = $derived(currentIndex < questions.length - 1);
 	const progress = $derived(
 		questions.length > 0 ? Math.round((furthestIndex / questions.length) * 100) : 0
+	);
+
+	const sessionTitle = $derived.by(() => {
+		if (!session) return '';
+		if (session.type === 'chapter' && session.chapterIds.length === 1) {
+			const ch = chapterMap.get(session.chapterIds[0]);
+			if (ch) return ch.title;
+		} else if (session.type === 'wrong_only') {
+			return 'Wrong Answers Review';
+		} else if (session.type === 'final_assessment') {
+			return 'Final Assessment Session';
+		} else if (session.type === 'custom') {
+			return 'Custom Study Session';
+		}
+		if (session.chapterIds.length === 1) {
+			const ch = chapterMap.get(session.chapterIds[0]);
+			if (ch) return ch.title;
+		}
+		return 'Study Session';
+	});
+
+	const currentChapter = $derived(
+		currentQuestion ? chapterMap.get(currentQuestion.chapterId) : undefined
+	);
+	const currentTheme = $derived.by(() => {
+		if (currentChapter) {
+			return themeMap.get(currentChapter.themeId);
+		}
+		if (session?.themeIds.length) {
+			return themeMap.get(session.themeIds[0]);
+		}
+		return undefined;
+	});
+	const currentTopic = $derived(
+		currentQuestion?.topicId ? topicMap.get(currentQuestion.topicId) : undefined
 	);
 
 	let shuffledChoices = $state<string[]>([]);
@@ -126,8 +186,9 @@
 		}
 	}
 
-	function nextQuestion() {
-		currentIndex++;
+	function navigateToQuestion(index: number) {
+		if (index < 0 || index >= questions.length) return;
+		currentIndex = index;
 		const existingAnswer = answers.find((a) => a.questionId === questions[currentIndex]?.id);
 		if (existingAnswer) {
 			currentAnswer = existingAnswer;
@@ -143,19 +204,17 @@
 		}
 	}
 
+	function nextQuestion() {
+		if (currentIndex + 1 >= questions.length) {
+			currentIndex = questions.length;
+			return;
+		}
+		navigateToQuestion(currentIndex + 1);
+	}
+
 	function goToPrevious() {
 		if (currentIndex <= 0) return;
-		currentIndex--;
-		const existingAnswer = answers.find((a) => a.questionId === questions[currentIndex]?.id);
-		if (existingAnswer) {
-			currentAnswer = existingAnswer;
-			showExplanation = true;
-		} else {
-			showExplanation = false;
-			currentAnswer = undefined;
-		}
-		userAnswer = '';
-		selectedChoices = [];
+		navigateToQuestion(currentIndex - 1);
 	}
 
 	async function handleOverride(result: 'correct' | 'incorrect') {
@@ -379,8 +438,36 @@
 	</div>
 {:else if currentQuestion}
 	<div class="mx-auto max-w-2xl space-y-6">
+		<div>
+			<h1 class="text-xl font-bold text-gray-900">{sessionTitle}</h1>
+			<div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+				{#if currentTheme}
+					<span
+						class="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
+					>
+						{currentTheme.title}
+					</span>
+				{/if}
+				{#if currentChapter && sessionTitle !== currentChapter.title}
+					{#if currentTheme}<span class="text-xs text-gray-400">&bull;</span>{/if}
+					<span>{currentChapter.title}</span>
+				{/if}
+				{#if currentTopic}
+					{#if currentTheme || (currentChapter && sessionTitle !== currentChapter.title)}
+						<span class="text-xs text-gray-400">&bull;</span>
+					{/if}
+					<span class="font-medium text-gray-700">{currentTopic.title}</span>
+				{:else if currentQuestion.isFinalAssessment}
+					{#if currentTheme || (currentChapter && sessionTitle !== currentChapter.title)}
+						<span class="text-xs text-gray-400">&bull;</span>
+					{/if}
+					<span class="font-medium text-amber-700">Final Assessment</span>
+				{/if}
+			</div>
+		</div>
+
 		<div class="flex items-center justify-between">
-			<span class="text-sm text-gray-500">
+			<span class="text-sm font-medium text-gray-600">
 				Question {currentIndex + 1} of {questions.length}
 			</span>
 			{#if currentQuestion.isFinalAssessment}
@@ -531,12 +618,12 @@
 					></textarea>
 				{/if}
 
-				<div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+				<div class="mt-4 flex flex-wrap items-center justify-between flex-wrap gap-3">
 					<div class="flex gap-2">
 						{#if canGoPrevious}
 							<button
 								onclick={goToPrevious}
-								class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
+								class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
 							>
 								← Previous <span class="text-xs text-gray-400">(←)</span>
 							</button>
@@ -569,6 +656,14 @@
 							Skip
 						</button>
 					</div>
+					{#if canGoNext}
+						<button
+							onclick={nextQuestion}
+							class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+						>
+							Next →
+						</button>
+					{/if}
 				</div>
 			{:else if currentAnswer}
 				<div class="mt-4 space-y-4" aria-live="polite">
