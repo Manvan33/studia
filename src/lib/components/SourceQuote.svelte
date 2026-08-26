@@ -40,7 +40,9 @@
 <div class="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3">
 	<div class="flex items-start justify-between gap-3">
 		<div class="min-w-0 flex-1">
-			<p class="text-xs font-medium tracking-wide text-yellow-700 uppercase">From the study guide</p>
+			<p class="text-xs font-medium tracking-wide text-yellow-700 uppercase">
+				From the study guide
+			</p>
 			<blockquote class="mt-1 border-l-2 border-yellow-300 pl-3 text-sm text-gray-800 italic">
 				"{sourceRef.quote}"
 			</blockquote>
