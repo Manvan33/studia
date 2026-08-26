@@ -30,7 +30,9 @@
 {#if theme}
 	<div class="space-y-6">
 		<div>
-			<a href="{base}/themes" class="text-sm text-primary-600 hover:text-primary-700">&larr; All Themes</a>
+			<a href="{base}/themes" class="text-sm text-primary-600 hover:text-primary-700"
+				>&larr; All Themes</a
+			>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">{theme.title}</h1>
 			{#if theme.description}
 				<p class="mt-1 text-gray-500">{theme.description}</p>

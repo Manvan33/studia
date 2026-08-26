@@ -304,7 +304,8 @@
 					<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 						<div class="mb-3 flex items-center justify-between">
 							<h3 class="text-sm font-semibold text-gray-800">Recent Results</h3>
-							<a href="{base}/history" class="text-xs text-primary-600 hover:text-primary-700">View all</a
+							<a href="{base}/history" class="text-xs text-primary-600 hover:text-primary-700"
+								>View all</a
 							>
 						</div>
 						{#if selectedThemeRecentCompletedSessions.length === 0}

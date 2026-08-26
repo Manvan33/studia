@@ -24,14 +24,7 @@ export function validateImportData(data: unknown): ValidationResult {
 
 	const d = data as Record<string, unknown>;
 
-	if (!d.theme || typeof d.theme !== 'object') {
-		errors.push({ path: 'theme', message: 'Missing or invalid theme object' });
-	} else {
-		const theme = d.theme as Record<string, unknown>;
-		if (!theme.title || typeof theme.title !== 'string' || theme.title.trim() === '') {
-			errors.push({ path: 'theme.title', message: 'Theme title is required' });
-		}
-	}
+	validateTheme(d.theme, errors);
 
 	if (!Array.isArray(d.chapters)) {
 		errors.push({ path: 'chapters', message: 'Chapters must be an array' });
@@ -47,6 +40,18 @@ export function validateImportData(data: unknown): ValidationResult {
 	});
 
 	return { valid: errors.length === 0, errors };
+}
+
+function validateTheme(themeData: unknown, errors: ValidationError[]): void {
+	if (!themeData || typeof themeData !== 'object') {
+		errors.push({ path: 'theme', message: 'Missing or invalid theme object' });
+		return;
+	}
+
+	const theme = themeData as Record<string, unknown>;
+	if (!theme.title || typeof theme.title !== 'string' || theme.title.trim() === '') {
+		errors.push({ path: 'theme.title', message: 'Theme title is required' });
+	}
 }
 
 function validateChapter(chapter: unknown, path: string, errors: ValidationError[]): void {
@@ -365,33 +370,82 @@ export async function exportThemeAsJson(themeId: string): Promise<ImportData> {
 	if (!theme) throw new Error('Theme not found');
 
 	const chapters = await db.chapters.where('themeId').equals(themeId).sortBy('order');
+	const chapterIds = chapters.map((c) => c.id);
+
+	if (chapterIds.length === 0) {
+		return {
+			theme: {
+				title: theme.title,
+				...(theme.description ? { description: theme.description } : {})
+			},
+			chapters: []
+		};
+	}
+
+	const topics = await db.topics.where('chapterId').anyOf(chapterIds).toArray();
+	const questions = await db.questions.where('chapterId').anyOf(chapterIds).toArray();
+
+	const topicsByChapterId = new Map<string, Topic[]>();
+	for (const topic of topics) {
+		if (!topicsByChapterId.has(topic.chapterId)) {
+			topicsByChapterId.set(topic.chapterId, []);
+		}
+		topicsByChapterId.get(topic.chapterId)!.push(topic);
+	}
+
+	for (const t of topicsByChapterId.values()) {
+		t.sort((a, b) => a.order - b.order);
+	}
+
+	const topicQuestionsByChapterId = new Map<string, Map<string, Question[]>>();
+	const finalQuestionsByChapterId = new Map<string, Question[]>();
+
+	for (const q of questions) {
+		if (q.isFinalAssessment) {
+			if (!finalQuestionsByChapterId.has(q.chapterId)) {
+				finalQuestionsByChapterId.set(q.chapterId, []);
+			}
+			finalQuestionsByChapterId.get(q.chapterId)!.push(q);
+		} else {
+			if (!topicQuestionsByChapterId.has(q.chapterId)) {
+				topicQuestionsByChapterId.set(q.chapterId, new Map<string, Question[]>());
+			}
+			const byTopicId = topicQuestionsByChapterId.get(q.chapterId)!;
+			if (q.topicId) {
+				if (!byTopicId.has(q.topicId)) {
+					byTopicId.set(q.topicId, []);
+				}
+				byTopicId.get(q.topicId)!.push(q);
+			}
+		}
+	}
+
+	for (const fq of finalQuestionsByChapterId.values()) {
+		fq.sort((a, b) => a.order - b.order);
+	}
+
+	for (const byTopicId of topicQuestionsByChapterId.values()) {
+		for (const tq of byTopicId.values()) {
+			tq.sort((a, b) => a.order - b.order);
+		}
+	}
+
 	const exportChapters: ImportChapter[] = [];
 
 	for (const chapter of chapters) {
-		const topics = await db.topics.where('chapterId').equals(chapter.id).sortBy('order');
+		const chapterTopics = topicsByChapterId.get(chapter.id) || [];
+		const chapterFinalQuestions = finalQuestionsByChapterId.get(chapter.id) || [];
+		const chapterTopicQuestionsMap =
+			topicQuestionsByChapterId.get(chapter.id) || new Map<string, Question[]>();
 
-		const topicQuestions = await db.questions
-			.where('chapterId')
-			.equals(chapter.id)
-			.and((q) => !q.isFinalAssessment)
-			.toArray();
-
-		const finalQuestions = await db.questions
-			.where('chapterId')
-			.equals(chapter.id)
-			.and((q) => q.isFinalAssessment)
-			.sortBy('order');
-
-		const exportTopics: ImportTopic[] = topics.map((topic) => {
-			const questions = topicQuestions
-				.filter((question) => question.topicId === topic.id)
-				.sort((a, b) => a.order - b.order);
+		const exportTopics: ImportTopic[] = chapterTopics.map((topic) => {
+			const topicQuestions = chapterTopicQuestionsMap.get(topic.id) || [];
 
 			return {
 				title: topic.title,
 				...(topic.description ? { description: topic.description } : {}),
 				order: topic.order,
-				questions: questions.map(questionToImport)
+				questions: topicQuestions.map(questionToImport)
 			};
 		});
 
@@ -402,8 +456,8 @@ export async function exportThemeAsJson(themeId: string): Promise<ImportData> {
 			topics: exportTopics
 		};
 
-		if (finalQuestions.length > 0) {
-			exportChapter.finalAssessment = finalQuestions.map(questionToImport);
+		if (chapterFinalQuestions.length > 0) {
+			exportChapter.finalAssessment = chapterFinalQuestions.map(questionToImport);
 		}
 
 		exportChapters.push(exportChapter);
