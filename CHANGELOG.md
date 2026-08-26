@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Keyboard navigation for question answering flow**:
+  - Select / toggle choices using number keys `1` to `9` (matching numbered badges `[1]`, `[2]`, etc. displayed next to each option).
+  - Submit answers by pressing `Enter` (or `Enter` within free-text textareas).
+  - Open the attached study guide (if available) and scroll to explanation by pressing `E` / `e`.
+  - Advance to the next question by pressing `Enter` or `ArrowRight` when reviewing explanations.
+  - Move to previous questions using `ArrowLeft`.
+  - Visual keyboard shortcut hints displayed on action buttons and choices.
+
 - **Source references for correct answers**: every question can carry a `sourceRef` with a verbatim quote from the original study guide and an optional locator (`page`, `section`, `anchor`). Displayed under the explanation in study and history views.
 - **Per-chapter study guide attachments**: upload PDF or HTML originals on the chapter manage page (`/manage/chapters/:id`). Stored locally in IndexedDB as Blobs in a new `sourceDocuments` table (Dexie v2).
 - **Right-side source panel** (`SourcePanel.svelte`): renders the attached PDF (via `pdfjs-dist`, lazy-loaded, `isEvalSupported: false`) or HTML in a sandboxed iframe (`sandbox="allow-same-origin"`, restrictive CSP, scripts/event-handlers stripped). Auto-scrolls to the locator and highlights the matching quote.
