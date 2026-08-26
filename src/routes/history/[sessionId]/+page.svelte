@@ -345,7 +345,7 @@
 								type="button"
 								onclick={() => toggleTopic(group.id)}
 								aria-expanded={isExpanded}
-								aria-controls="topic-group-{group.id}"
+								aria-controls={`topic-group-${group.id}`}
 								class="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-gray-50 focus:outline-none"
 							>
 								<div class="flex items-center gap-3">
@@ -406,7 +406,7 @@
 
 							{#if isExpanded}
 								<div
-									id="topic-group-{group.id}"
+									id={`topic-group-${group.id}`}
 									class="space-y-3 border-t border-gray-100 bg-gray-50/50 p-4"
 								>
 									{#each group.questions as question, i}
