@@ -159,7 +159,7 @@ SOURCE REFERENCES:
 
 USER-SETTINGS:
 
-- Student persona: I'm a Cisco Solutions Engineer, I have a strong background in networking. 
+- Student persona: I'm a Cisco Solutions Engineer, I have a strong background in networking.
 - Difficulty level: Make it hard
 - How many questions: around 30 (20 while learning topics, 10 for the final assessment) per chapter
 

@@ -165,7 +165,8 @@
 {#if theme}
 	<div class="mx-auto max-w-2xl space-y-6">
 		<div>
-			<a href="{base}/manage" class="text-sm text-primary-600 hover:text-primary-700">&larr; Back</a>
+			<a href="{base}/manage" class="text-sm text-primary-600 hover:text-primary-700">&larr; Back</a
+			>
 			<h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Theme</h1>
 		</div>
 

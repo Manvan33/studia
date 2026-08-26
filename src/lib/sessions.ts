@@ -32,9 +32,14 @@ export async function createChapterSession(chapterId: string): Promise<StudySess
 		.and((q) => q.isFinalAssessment)
 		.sortBy('order');
 
+	const topicOrderMap = new Map<string, number>();
+	for (const t of topics) {
+		topicOrderMap.set(t.id, t.order);
+	}
+
 	const sortedTopicQuestions = topicQuestions.sort((a, b) => {
-		const topicOrderA = topics.find((t) => t.id === a.topicId)?.order ?? 0;
-		const topicOrderB = topics.find((t) => t.id === b.topicId)?.order ?? 0;
+		const topicOrderA = a.topicId ? (topicOrderMap.get(a.topicId) ?? 0) : 0;
+		const topicOrderB = b.topicId ? (topicOrderMap.get(b.topicId) ?? 0) : 0;
 		if (topicOrderA !== topicOrderB) return topicOrderA - topicOrderB;
 		return a.order - b.order;
 	});
@@ -90,9 +95,14 @@ export async function createCustomSession(opts: {
 				.and((q) => !q.isFinalAssessment)
 				.sortBy('order');
 
+			const topicOrderMap = new Map<string, number>();
+			for (const t of topics) {
+				topicOrderMap.set(t.id, t.order);
+			}
+
 			const sorted = topicQuestions.sort((a, b) => {
-				const topicOrderA = topics.find((t) => t.id === a.topicId)?.order ?? 0;
-				const topicOrderB = topics.find((t) => t.id === b.topicId)?.order ?? 0;
+				const topicOrderA = a.topicId ? (topicOrderMap.get(a.topicId) ?? 0) : 0;
+				const topicOrderB = b.topicId ? (topicOrderMap.get(b.topicId) ?? 0) : 0;
 				if (topicOrderA !== topicOrderB) return topicOrderA - topicOrderB;
 				return a.order - b.order;
 			});

@@ -67,7 +67,8 @@ export async function getProgressStats(): Promise<ProgressStats> {
 		.map((s) => s.scoring?.scorePercentage)
 		.filter((s): s is number => s !== undefined);
 
-	const averageScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+	const averageScore =
+		scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
 	const recentSessions = completedSessions
 		.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -75,7 +76,12 @@ export async function getProgressStats(): Promise<ProgressStats> {
 
 	const weakTopics = computeWeakTopics(allProgress, allQuestions, allTopics);
 	const weakChapters = computeWeakChapters(allProgress, allQuestions, allChapters);
-	const frequentlyMissed = computeFrequentlyMissed(allProgress, allQuestions, allTopics, allChapters);
+	const frequentlyMissed = computeFrequentlyMissed(
+		allProgress,
+		allQuestions,
+		allTopics,
+		allChapters
+	);
 	const chapterCompletionStatus = computeChapterCompletion(allQuestions, allChapters, allProgress);
 	const finalAssessmentPerformance = computeFinalAssessmentPerformance(
 		allQuestions,
@@ -201,7 +207,7 @@ function computeChapterCompletion(
 			const chapterQuestions = questions.filter((q) => q.chapterId === chapter.id);
 			const answered = chapterQuestions.filter((q) => progressMap.has(q.id));
 			const correctCount = answered.reduce(
-				(sum, q) => sum + (progressMap.get(q.id)?.timesCorrect ?? 0 > 0 ? 1 : 0),
+				(sum, q) => sum + ((progressMap.get(q.id)?.timesCorrect ?? 0 > 0) ? 1 : 0),
 				0
 			);
 
@@ -210,8 +216,7 @@ function computeChapterCompletion(
 				chapterTitle: chapter.title,
 				totalQuestions: chapterQuestions.length,
 				answeredQuestions: answered.length,
-				correctRate:
-					answered.length > 0 ? Math.round((correctCount / answered.length) * 100) : 0,
+				correctRate: answered.length > 0 ? Math.round((correctCount / answered.length) * 100) : 0,
 				hasBeenStudied: answered.length > 0
 			};
 		});

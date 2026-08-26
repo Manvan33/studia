@@ -7,11 +7,13 @@ Technical findings, problems encountered, and solutions during development.
 **Problem**: `pdfjs-dist` v4 ships ES modules and a separate worker. Using it without configuring the worker URL causes "Setting up fake worker failed" errors.
 
 **Solution**: Lazy-import on demand and resolve the worker through Vite's `?url` suffix:
+
 ```ts
 const pdfjs = await import('pdfjs-dist');
 const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 ```
+
 Pass `isEvalSupported: false`, `disableAutoFetch: true`, `disableStream: true` to `getDocument()` for security & predictable behaviour with in-memory blobs. Note: in v4 `page.render()` no longer accepts a `canvas` field — pass only `canvasContext` and `viewport`.
 
 ## Sandboxing Untrusted HTML Study Guides
@@ -51,8 +53,10 @@ Pass `isEvalSupported: false`, `disableAutoFetch: true`, `disableStream: true` t
 **Thought process**: The import flow appeared to work (validation passed, preview displayed correctly) but clicking "Import" had no visible effect — no navigation, no error message. Adding console.log to the handler revealed the function was called and passed the guard, but `importData()` threw a DexieError. The error message `DataCloneError` pointed to the structured clone issue with proxied arrays (like `choices` on MCQ questions).
 
 **Solution**: Use `$state.snapshot()` to unwrap the reactive proxy before passing data to Dexie:
+
 ```typescript
 const rawPreview = $state.snapshot(preview);
 const { themeId } = await importData(rawPreview);
 ```
+
 For simpler cases (e.g., a `$state` array being passed to `db.add()`), spreading the array (`[...proxyArray]`) also works. This applies anywhere `$state` data flows into IndexedDB write operations.

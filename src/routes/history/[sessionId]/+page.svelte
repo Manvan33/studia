@@ -334,10 +334,7 @@
 									</div>
 									{#if question.sourceRef}
 										<div class="mt-2">
-											<SourceQuote
-												chapterId={question.chapterId}
-												sourceRef={question.sourceRef}
-											/>
+											<SourceQuote chapterId={question.chapterId} sourceRef={question.sourceRef} />
 										</div>
 									{/if}
 								{/if}
