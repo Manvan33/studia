@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Removed
+
+- Commented out boilerplate interfaces in `src/app.d.ts` for better readability.
+
 ### Added
 
 - GitHub Pages deployment workflow via GitHub Actions (`.github/workflows/deploy-pages.yml`) that builds and deploys static output from `build/`
