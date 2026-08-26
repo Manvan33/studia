@@ -107,16 +107,6 @@ function computeWeakTopics(
 	questions: Question[],
 	topics: Topic[]
 ): WeakItem[] {
-	const questionMap = new Map<string, Question>();
-	for (const q of questions) {
-		questionMap.set(q.id, q);
-	}
-
-	const topicMap = new Map<string, Topic>();
-	for (const t of topics) {
-		topicMap.set(t.id, t);
-	}
-
 	const topicStats = new Map<string, { correct: number; total: number }>();
 	const questionMap = new Map<string, Question>(questions.map((q) => [q.id, q]));
 	const topicMap = new Map<string, Topic>(topics.map((t) => [t.id, t]));
@@ -152,16 +142,6 @@ function computeWeakChapters(
 	questions: Question[],
 	chapters: Chapter[]
 ): WeakItem[] {
-	const questionMap = new Map<string, Question>();
-	for (const q of questions) {
-		questionMap.set(q.id, q);
-	}
-
-	const chapterMap = new Map<string, Chapter>();
-	for (const c of chapters) {
-		chapterMap.set(c.id, c);
-	}
-
 	const chapterStats = new Map<string, { correct: number; total: number }>();
 	const questionMap = new Map<string, Question>(questions.map((q) => [q.id, q]));
 	const chapterMap = new Map<string, Chapter>(chapters.map((c) => [c.id, c]));

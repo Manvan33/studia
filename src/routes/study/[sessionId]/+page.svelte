@@ -195,6 +195,7 @@
 		}
 	}
 
+	function handleKeydown(event: KeyboardEvent) {
 		const target = event.target as HTMLElement | null;
 		const isEditable =
 			target &&

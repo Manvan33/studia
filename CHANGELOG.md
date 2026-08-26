@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - History session links missing base path prefix, causing bad redirection on deployments with a base path (e.g., `/studia`).
+- Build failure in `src/routes/study/[sessionId]/+page.svelte` caused by a missing `handleKeydown` function declaration, which left `return` statements outside of any function.
+- Build failure in `src/lib/progress.ts` caused by duplicate `questionMap`/`topicMap`/`chapterMap` declarations left over from a bad merge.
 ### Removed
 
 - Commented out boilerplate interfaces in `src/app.d.ts` for better readability.
