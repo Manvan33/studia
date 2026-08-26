@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Improved
+
+- **Session Summary Page**:
+  - Displays Theme, Chapter, and Topic metadata in a top summary card.
+  - Groups questions & answers under the "Per Topic" section with interactive collapsible topic tiles.
+  - Each topic tile displays question counts and score breakdown badges (correct, incorrect, skipped), expandable to reveal question details and explanations.
+  - Includes "Expand All" and "Collapse All" controls.
 ### Fixed
 
 - History session links missing base path prefix, causing bad redirection on deployments with a base path (e.g., `/studia`).
