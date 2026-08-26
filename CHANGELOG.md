@@ -139,3 +139,11 @@ All notable changes to this project will be documented in this file.
 ### Added (Testing)
 
 - End-to-end test suite (`e2e-test.mjs`) using Playwright with 42 tests covering: empty states, import flow, theme/chapter navigation, study session (MCQ + free text + final assessment), session completion, history, dashboard stats, custom session setup, content management, and mobile responsiveness
+
+### Added (Testing)
+
+- Unit tests for 'renderMarkdown' sanitization in 'src/lib/markdown.test.ts' covering script tags and event handlers.
+
+### Fixed
+
+- Improved 'renderMarkdown' sanitization logic to handle nested script tags and multiple event handlers more effectively.

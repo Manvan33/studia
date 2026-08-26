@@ -38,3 +38,11 @@ const rawPreview = $state.snapshot(preview);
 const { themeId } = await importData(rawPreview);
 ```
 For simpler cases (e.g., a `$state` array being passed to `db.add()`), spreading the array (`[...proxyArray]`) also works. This applies anywhere `$state` data flows into IndexedDB write operations.
+
+## Markdown Sanitization Testing
+
+- **Issue:** 'renderMarkdown' lacked unit tests for its basic XSS sanitization.
+- **Solution:** Created 'src/lib/markdown.test.ts' using Node.js built-in 'node:test' runner.
+- **Discovery:** The original sanitization regex was vulnerable to nested tags (e.g., '<script><script></script>').
+- **Improvement:** Updated 'sanitize' to use a loop and more comprehensive regex to strip all script tags and event handlers more reliably.
+- **Note:** Due to 'npm install' issues in the sandbox environment, unit tests were run against a mock 'marked' package, but the sanitization logic itself (which is the focus of the test) was fully exercised.

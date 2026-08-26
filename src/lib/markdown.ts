@@ -16,8 +16,16 @@ export function renderMarkdown(text: string): string {
 }
 
 function sanitize(html: string): string {
-	return html
-		.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-		.replace(/on\w+="[^"]*"/gi, '')
-		.replace(/on\w+='[^']*'/gi, '');
+	let current = html;
+	let previous;
+	do {
+		previous = current;
+		current = current
+			.replace(/<script\b[\s\S]*?<\/script>/gi, '')
+			.replace(/on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+	} while (current !== previous);
+
+	return current
+		.replace(/<script\b[\s\S]*$/gi, '')
+		.replace(/<\/script>/gi, '');
 }
